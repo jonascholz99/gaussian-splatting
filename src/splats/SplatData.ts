@@ -15,9 +15,12 @@ class SplatData {
     private _colors: Uint8Array;
     private _selection: Uint8Array;
 
+    private removeItemsFromArray: (arr: Float32Array | Uint8Array, start: number, count: number) => Float32Array | Uint8Array;
     translate: (translation: Vector3) => void;
     rotate: (rotation: Quaternion) => void;
     scale: (scale: Vector3) => void;
+    removeVertex:(index: number) => void;
+    removeVertexRange:(index: number, count: number) => void;
     serialize: () => Uint8Array;
     reattach: (
         positions: ArrayBufferLike,
@@ -51,6 +54,51 @@ class SplatData {
             this.changed = true;
         };
 
+        this.removeVertex = (index: number) => {
+            if(index < 0 || index >= this._vertexCount) {
+                throw new Error("Index out od bounds");
+            }
+
+            // remove from positions
+            this._positions = <Float32Array>this.removeItemsFromArray(this._positions, index * 3, 3);
+            // remove from rotations
+            this._rotations = <Float32Array>this.removeItemsFromArray(this._rotations, index * 4, 4);
+            // remove from scales
+            this._scales = <Float32Array>this.removeItemsFromArray(this._scales, index * 3, 3);
+            // remove from colors
+            this._colors = <Uint8Array>this.removeItemsFromArray(this._colors, index * 4, 4);
+
+            this._vertexCount--;  // reduce vertexCount
+            this.changed = true; 
+        }
+        
+        this.removeVertexRange = (index: number, count: number) => {
+            if (index < 0 || index + count > this._vertexCount) {
+                throw new Error("Index range out of bounds");
+            }
+
+            // remove from positions
+            this._positions = <Float32Array>this.removeItemsFromArray(this._positions, index * 3, count * 3);
+            // remove from rotations
+            this._rotations = <Float32Array>this.removeItemsFromArray(this._rotations, index * 4, count * 4);
+            // remove from scales
+            this._scales = <Float32Array>this.removeItemsFromArray(this._scales, index * 3, count * 3);
+            // remove from colors
+            this._colors = <Uint8Array>this.removeItemsFromArray(this._colors, index * 4, count * 4);
+
+            this._vertexCount--;  // reduce vertexCount
+            this.changed = true;
+        }
+        
+        this.removeItemsFromArray = (arr: Float32Array | Uint8Array, start: number, count: number) => {
+            let part1 = arr.subarray(0, start);
+            let part2 = arr.subarray(start + count, arr.length);
+            let newArr = new (arr.constructor as any)(part1.length + part2.length);
+            newArr.set(part1, 0);
+            newArr.set(part2, part1.length);
+            return newArr;
+        }
+        
         this.rotate = (rotation: Quaternion) => {
             const R = Matrix3.RotationFromQuaternion(rotation).buffer;
             for (let i = 0; i < this.vertexCount; i++) {
