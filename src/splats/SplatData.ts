@@ -86,7 +86,7 @@ class SplatData {
             // remove from colors
             this._colors = <Uint8Array>this.removeItemsFromArray(this._colors, index * 4, count * 4);
 
-            this._vertexCount--;  // reduce vertexCount
+            this._vertexCount -= count;  // reduce vertexCount
             this.changed = true;
         }
         
