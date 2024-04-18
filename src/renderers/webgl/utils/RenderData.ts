@@ -51,7 +51,7 @@ class RenderData {
                 this._splatIndices.set(object, splatIndex);
                 this._offsets.set(object, vertexCount);
                 lookup.set(vertexCount, object);
-                vertexCount += object.data.vertexCount;
+                vertexCount += object.splatCount;
                 splatIndex++;
             }
         }
@@ -145,7 +145,7 @@ class RenderData {
                 updateColorTransforms();
 
                 const splatIndex = this._splatIndices.get(splat) as number;
-                for (let i = 0; i < splat.data.vertexCount; i++) {
+                for (let i = 0; i < splat.splatCount; i++) {
                     this._transformIndices[response.offset + i] = splatIndex;
                 }
 
@@ -195,25 +195,25 @@ class RenderData {
 
             updateTransform(splat);
 
-            const positionsPtr = wasmModule._malloc(3 * splat.data.vertexCount * 4);
-            const rotationsPtr = wasmModule._malloc(4 * splat.data.vertexCount * 4);
-            const scalesPtr = wasmModule._malloc(3 * splat.data.vertexCount * 4);
-            const colorsPtr = wasmModule._malloc(4 * splat.data.vertexCount);
-            const selectionPtr = wasmModule._malloc(splat.data.vertexCount);
-            const dataPtr = wasmModule._malloc(8 * splat.data.vertexCount * 4);
-            const worldPositionsPtr = wasmModule._malloc(3 * splat.data.vertexCount * 4);
-            const worldRotationsPtr = wasmModule._malloc(4 * splat.data.vertexCount * 4);
-            const worldScalesPtr = wasmModule._malloc(3 * splat.data.vertexCount * 4);
+            const positionsPtr = wasmModule._malloc(3 * splat.splatCount * 4);
+            const rotationsPtr = wasmModule._malloc(4 * splat.splatCount * 4);
+            const scalesPtr = wasmModule._malloc(3 * splat.splatCount * 4);
+            const colorsPtr = wasmModule._malloc(4 * splat.splatCount);
+            const selectionPtr = wasmModule._malloc(splat.splatCount);
+            const dataPtr = wasmModule._malloc(8 * splat.splatCount * 4);
+            const worldPositionsPtr = wasmModule._malloc(3 * splat.splatCount * 4);
+            const worldRotationsPtr = wasmModule._malloc(4 * splat.splatCount * 4);
+            const worldScalesPtr = wasmModule._malloc(3 * splat.splatCount * 4);
 
-            wasmModule.HEAPF32.set(splat.data.positions, positionsPtr / 4);
-            wasmModule.HEAPF32.set(splat.data.rotations, rotationsPtr / 4);
-            wasmModule.HEAPF32.set(splat.data.scales, scalesPtr / 4);
-            wasmModule.HEAPU8.set(splat.data.colors, colorsPtr);
+            wasmModule.HEAPF32.set(splat.Positions, positionsPtr / 4);
+            wasmModule.HEAPF32.set(splat.Rotations, rotationsPtr / 4);
+            wasmModule.HEAPF32.set(splat.Scales, scalesPtr / 4);
+            wasmModule.HEAPU8.set(splat.Colors, colorsPtr);
             wasmModule.HEAPU8.set(splat.data.selection, selectionPtr);
 
             wasmModule._pack(
                 splat.selected,
-                splat.data.vertexCount,
+                splat.splatCount,
                 positionsPtr,
                 rotationsPtr,
                 scalesPtr,
@@ -225,22 +225,22 @@ class RenderData {
                 worldScalesPtr,
             );
 
-            const outData = new Uint32Array(wasmModule.HEAPU32.buffer, dataPtr, splat.data.vertexCount * 8);
+            const outData = new Uint32Array(wasmModule.HEAPU32.buffer, dataPtr, splat.splatCount * 8);
             const worldPositions = new Float32Array(
                 wasmModule.HEAPF32.buffer,
                 worldPositionsPtr,
-                splat.data.vertexCount * 3,
+                splat.splatCount * 3,
             );
             const worldRotations = new Float32Array(
                 wasmModule.HEAPF32.buffer,
                 worldRotationsPtr,
-                splat.data.vertexCount * 4,
+                splat.splatCount * 4,
             );
-            const worldScales = new Float32Array(wasmModule.HEAPF32.buffer, worldScalesPtr, splat.data.vertexCount * 3);
+            const worldScales = new Float32Array(wasmModule.HEAPF32.buffer, worldScalesPtr, splat.splatCount * 3);
 
             const splatIndex = this._splatIndices.get(splat) as number;
             const offset = this._offsets.get(splat) as number;
-            for (let i = 0; i < splat.data.vertexCount; i++) {
+            for (let i = 0; i < splat.splatCount; i++) {
                 this._transformIndices[offset + i] = splatIndex;
             }
             this._data.set(outData, offset * 8);
@@ -278,11 +278,11 @@ class RenderData {
                 rotation: new Float32Array(splat.rotation.flat()),
                 scale: new Float32Array(splat.scale.flat()),
                 selected: splat.selected,
-                vertexCount: splat.data.vertexCount,
-                positions: splat.data.positions,
-                rotations: splat.data.rotations,
-                scales: splat.data.scales,
-                colors: splat.data.colors,
+                vertexCount: splat.splatCount,
+                positions: splat.Positions,
+                rotations: splat.Rotations,
+                scales: splat.Scales,
+                colors: splat.Colors,
                 selection: splat.data.selection,
                 offset: this._offsets.get(splat) as number,
             };

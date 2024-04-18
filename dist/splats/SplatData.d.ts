@@ -1,5 +1,3 @@
-import { Vector3 } from "../math/Vector3";
-import { Quaternion } from "../math/Quaternion";
 declare class SplatData {
     static RowLength: number;
     changed: boolean;
@@ -11,9 +9,6 @@ declare class SplatData {
     private _colors;
     private _selection;
     private removeItemsFromArray;
-    translate: (translation: Vector3) => void;
-    rotate: (rotation: Quaternion) => void;
-    scale: (scale: Vector3) => void;
     removeVertex: (index: number) => void;
     removeVertexRange: (index: number, count: number) => void;
     serialize: () => Uint8Array;

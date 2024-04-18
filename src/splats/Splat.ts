@@ -34,18 +34,24 @@ class Splat extends Object3D {
         );
         
         this.createSplatsData = () => {
-            console.log("About to create " + (this._data.vertexCount) + " splats!");
             
-            for(let i = 0; i < this._data.vertexCount; i++) {
-                let position: Float32Array = new Float32Array(this._data.positions.buffer, 3 * i * Constants.BYTE_OFFSET_FLOAT, 3);
-                let rotation: Float32Array = new Float32Array(this._data.rotations.buffer, 4 * i * Constants.BYTE_OFFSET_FLOAT, 4);
-                let scale: Float32Array = new Float32Array(this._data.scales.buffer, 3 * i * Constants.BYTE_OFFSET_FLOAT, 3);
-                
-                let singleSplat = new SingleSplat(position, rotation, scale);
-                this._splats.push(singleSplat)
+            if(splat != undefined)
+            {
+                console.log("About to create " + (splat.vertexCount) + " splats!");
+                console.log("Byte length Color: " + splat.colors.buffer.byteLength)
+                console.log("Byte length Position: " + splat.positions.buffer.byteLength)
+                for(let i = 0; i < splat.vertexCount; i++) {
+                    let position: Float32Array = new Float32Array(splat.positions.buffer, 3 * i * Constants.BYTE_OFFSET_FLOAT, 3);
+                    let rotation: Float32Array = new Float32Array(splat.rotations.buffer, 4 * i * Constants.BYTE_OFFSET_FLOAT, 4);
+                    let scale: Float32Array = new Float32Array(splat.scales.buffer, 3 * i * Constants.BYTE_OFFSET_FLOAT, 3);
+                    let color: Uint8Array = new Uint8Array(splat.colors.buffer, 1 * i * Constants.BYTE_OFFSET_INT, 4);
+                    
+                    let singleSplat = new SingleSplat(position, rotation, scale, color);
+                    this._splats.push(singleSplat)
+                }
+
+                console.log("Finish")
             }
-            
-            console.log("Finish")
             
         }
 
@@ -97,10 +103,10 @@ class Splat extends Object3D {
         this.applyScale();
         this.applyPosition();
 
-        const data = this.data.serialize();
+        const data = this.serialize();
         let blob;
         if (format === "ply") {
-            const plyData = Converter.SplatToPLY(data.buffer, this.data.vertexCount);
+            const plyData = Converter.SplatToPLY(data.buffer, this.splatCount);
             blob = new Blob([plyData], { type: "application/octet-stream" });
         } else {
             blob = new Blob([data.buffer], { type: "application/octet-stream" });
@@ -120,7 +126,7 @@ class Splat extends Object3D {
         return this._splats;
     }
     
-    public getSplatAtIndex(index: number): SingleSplat | undefined {
+    getSplatAtIndex(index: number): SingleSplat | undefined {
         if (index < 0 || index >= this._splats.length) {
             console.error("Index out of bounds");
             return undefined; 
@@ -156,6 +162,94 @@ class Splat extends Object3D {
         size = size.multiply(this.scale);
 
         return new Box3(center.subtract(size.divide(2)), center.add(size.divide(2)));
+    }
+    
+    get splatCount() {
+        return this._splats.length;
+    }
+
+    serialize = () => {
+        const data = new Uint8Array(this._splats.length * SplatData.RowLength);
+
+        const f_buffer = new Float32Array(data.buffer);
+        const u_buffer = new Uint8Array(data.buffer);
+        
+        for (let i = 0; i < this._splats.length; i++) {
+            f_buffer[8 * i + 0] = this._splats[i].Position[0];
+            f_buffer[8 * i + 1] = this._splats[i].Position[1];
+            f_buffer[8 * i + 2] = this._splats[i].Position[2];
+
+            u_buffer[32 * i + 24 + 0] = this._splats[i].Color[0];
+            u_buffer[32 * i + 24 + 1] = this._splats[i].Color[1];
+            u_buffer[32 * i + 24 + 2] = this._splats[i].Color[2];
+            u_buffer[32 * i + 24 + 3] = this._splats[i].Color[3];
+
+            f_buffer[8 * i + 3 + 0] = this._splats[i].Scale[0];
+            f_buffer[8 * i + 3 + 1] = this._splats[i].Scale[1];
+            f_buffer[8 * i + 3 + 2] = this._splats[i].Scale[2];
+
+            u_buffer[32 * i + 28 + 0] = (this._splats[i].Rotation[0] * 128 + 128) & 0xff;
+            u_buffer[32 * i + 28 + 1] = (this._splats[i].Rotation[1] * 128 + 128) & 0xff;
+            u_buffer[32 * i + 28 + 2] = (this._splats[i].Rotation[2] * 128 + 128) & 0xff;
+            u_buffer[32 * i + 28 + 3] = (this._splats[i].Rotation[3] * 128 + 128) & 0xff;
+        }
+
+        return data;
+    };
+
+    // reattach = (
+    //     positions: ArrayBufferLike,
+    //     rotations: ArrayBufferLike,
+    //     scales: ArrayBufferLike,
+    //     colors: ArrayBufferLike,
+    //     selection: ArrayBufferLike,
+    // ) => {
+    //     console.assert(
+    //         positions.byteLength === this.splatCount * 3 * 4,
+    //         `Expected ${this.splatCount * 3 * 4} bytes, got ${positions.byteLength} bytes`,
+    //     );
+    //     this._positions = new Float32Array(positions);
+    //     this._rotations = new Float32Array(rotations);
+    //     this._scales = new Float32Array(scales);
+    //     this._colors = new Uint8Array(colors);
+    //     this._selection = new Uint8Array(selection);
+    //     this.detached = false;
+    // };
+    
+    get Positions() {
+        let positions = new Float32Array(this._splats.length * 3);
+        
+        this._splats.forEach((singleSplat, index) => {
+            positions.set(singleSplat.Position, index * 3);
+        });
+        return positions;
+    }
+    
+    get Scales() {
+        let scales = new Float32Array(this._splats.length * 3);
+
+        this._splats.forEach((singleSplat, index) => {
+            scales.set(singleSplat.Scale, index * 3);
+        });
+        return scales;
+    }
+    
+    get Rotations() {
+        let rotations = new Float32Array(this._splats.length * 4);
+
+        this._splats.forEach((singleSplat, index) => {
+            rotations.set(singleSplat.Rotation, index * 4);
+        });
+        return rotations;
+    }
+    
+    get Colors() {
+        let colors = new Uint8Array(this._splats.length * 4);
+
+        this._splats.forEach((singleSplat, index) => {
+            colors.set(singleSplat.Color, index * 4);
+        });
+        return colors;
     }
 }
 

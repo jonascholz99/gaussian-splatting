@@ -12,7 +12,7 @@ class SingleSplat {
     private _position: Float32Array;
     private _rotation: Float32Array;
     private _scale: Float32Array;
-    // private _color: Uint8Array;
+    private _color: Uint8Array;
     
     private _selected: boolean = false;
     private _colorTransforms: Array<Matrix4> = [];
@@ -24,10 +24,11 @@ class SingleSplat {
     rotate: (rotation: Quaternion) => void;
     scale: (scale: Vector3) => void;
     
-    constructor(position: Float32Array, rotation: Float32Array, scale: Float32Array) {
+    constructor(position: Float32Array, rotation: Float32Array, scale: Float32Array, color: Uint8Array) {
         this._position = position;
         this._rotation = rotation;
         this._scale = scale;
+        this._color = color;
         
         this._bounds = new Box3(
             new Vector3(Infinity, Infinity, Infinity),
@@ -116,6 +117,14 @@ class SingleSplat {
     
     get ScaleVec3() {
         return new Vector3(this._scale[0], this._scale[1], this._scale[2]);
+    }
+    
+    get Color() {
+        return this._color;
+    }
+    
+    get Rotation() {
+        return this._rotation;
     }
 }
 

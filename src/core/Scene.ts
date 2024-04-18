@@ -81,9 +81,9 @@ class Scene extends EventDispatcher {
             object.applyScale();
             object.applyPosition();
             if (object instanceof Splat) {
-                const buffer = object.data.serialize();
+                const buffer = object.serialize();
                 buffers.push(buffer);
-                vertexCount += object.data.vertexCount;
+                vertexCount += object.splatCount;
             }
         }
 
