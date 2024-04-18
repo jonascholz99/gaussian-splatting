@@ -70,7 +70,9 @@ class Splat extends Object3D {
         };
 
         this.applyScale = () => {
-            this.data.scale(this.scale);
+            this._splats.forEach((splat, index) => {
+                splat.scale(this.scale);
+            });
             this.scale = new Vector3(1, 1, 1);
         };
         

@@ -16,7 +16,6 @@ class SplatData {
     private _selection: Uint8Array;
 
     private removeItemsFromArray: (arr: Float32Array | Uint8Array, start: number, count: number) => Float32Array | Uint8Array;
-    scale: (scale: Vector3) => void;
     removeVertex:(index: number) => void;
     removeVertexRange:(index: number, count: number) => void;
     serialize: () => Uint8Array;
@@ -86,21 +85,7 @@ class SplatData {
             newArr.set(part2, part1.length);
             return newArr;
         }
-
-        this.scale = (scale: Vector3) => {
-            for (let i = 0; i < this.vertexCount; i++) {
-                this.positions[3 * i + 0] *= scale.x;
-                this.positions[3 * i + 1] *= scale.y;
-                this.positions[3 * i + 2] *= scale.z;
-
-                this.scales[3 * i + 0] *= scale.x;
-                this.scales[3 * i + 1] *= scale.y;
-                this.scales[3 * i + 2] *= scale.z;
-            }
-
-            this.changed = true;
-        };
-
+        
         this.serialize = () => {
             const data = new Uint8Array(this.vertexCount * SplatData.RowLength);
 

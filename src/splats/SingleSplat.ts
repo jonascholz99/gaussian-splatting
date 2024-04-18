@@ -22,6 +22,7 @@ class SingleSplat {
     recalculateBounds: () => void;
     translate: (translation: Vector3) => void;
     rotate: (rotation: Quaternion) => void;
+    scale: (scale: Vector3) => void;
     
     constructor(position: Float32Array, rotation: Float32Array, scale: Float32Array) {
         this._position = position;
@@ -70,6 +71,19 @@ class SingleSplat {
             this._rotation[2] = newRot.y;
             this._rotation[3] = newRot.z;
             this._rotation[0] = newRot.w;
+            
+
+            this.changed = true;
+        };
+
+        this.scale = (scale: Vector3) => {
+            this._position[0] *= scale.x;
+            this._position[1] *= scale.y;
+            this._position[2] *= scale.z;
+
+            this._scale[0] *= scale.x;
+            this._scale[1] *= scale.y;
+            this._scale[2] *= scale.z;
             
 
             this.changed = true;
