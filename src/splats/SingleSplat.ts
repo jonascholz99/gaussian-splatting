@@ -1,23 +1,108 @@
 import {Object3D} from "../core/Object3D";
-import {SplatData} from "./SplatData";
-import {Matrix4} from "../math/Matrix4";
-import {Box3} from "../math/Box3";
-import {Vector3} from "../math/Vector3";
+import { Matrix4 } from "../math/Matrix4";
+import { Box3 } from "../math/Box3";
+import { Vector3 } from "../math/Vector3";
+import { Quaternion } from "../math/Quaternion";
+import { Matrix3 } from "../math/Matrix3";
 
-class SingleSplat extends Object3D {
-    private _data: SplatData;
+class SingleSplat {
+
+    public changed = false;
+    
+    private _position: Float32Array;
+    private _rotation: Float32Array;
+    private _scale: Float32Array;
+    // private _color: Uint8Array;
+    
     private _selected: boolean = false;
     private _colorTransforms: Array<Matrix4> = [];
     private _colorTransformsMap: Map<number, number> = new Map();
     private _bounds: Box3;
 
-    constructor(splat: SplatData | undefined = undefined) {
-        super();
-
-        this._data = splat || new SplatData();
+    recalculateBounds: () => void;
+    translate: (translation: Vector3) => void;
+    rotate: (rotation: Quaternion) => void;
+    
+    constructor(position: Float32Array, rotation: Float32Array, scale: Float32Array) {
+        this._position = position;
+        this._rotation = rotation;
+        this._scale = scale;
+        
         this._bounds = new Box3(
             new Vector3(Infinity, Infinity, Infinity),
             new Vector3(-Infinity, -Infinity, -Infinity),
         );
+
+        this.recalculateBounds = () => {
+            this._bounds.expand(new Vector3(this._position[0], this._position[1], this._position[2]))
+        };
+
+
+        this.translate = (translation: Vector3) => {
+            
+            this._position[0] += translation.x;
+            this._position[1] += translation.y;
+            this._position[2] += translation.z;
+
+            this.changed = true;
+        };
+
+        this.rotate = (rotation: Quaternion) => {
+            const R = Matrix3.RotationFromQuaternion(rotation).buffer;
+            
+            const x = this._position[0];
+            const y = this._position[1];
+            const z = this._position[2];
+
+            this._position[0] = R[0] * x + R[1] * y + R[2] * z;
+            this._position[1] = R[3] * x + R[4] * y + R[5] * z;
+            this._position[2] = R[6] * x + R[7] * y + R[8] * z;
+
+            const currentRotation = new Quaternion(
+                this._rotation[1],
+                this._rotation[2],
+                this._rotation[3],
+                this._rotation[0],
+            );
+
+            const newRot = rotation.multiply(currentRotation);
+            this._rotation[1] = newRot.x;
+            this._rotation[2] = newRot.y;
+            this._rotation[3] = newRot.z;
+            this._rotation[0] = newRot.w;
+            
+
+            this.changed = true;
+        };
+        
+        this.recalculateBounds();
+    }
+
+    get bounds() {
+        let center = this._bounds.center();
+        center = center.add(this.PositionVec3);
+
+        let size = this._bounds.size();
+        size = size.multiply(this.ScaleVec3);
+
+        return new Box3(center.subtract(size.divide(2)), center.add(size.divide(2)));
+    }
+    
+    get PositionVec3() {
+        return new Vector3(this._position[0], this._position[1], this._position[2]);
+    }
+    
+    get Position() {
+        return this._position;
+    }
+    
+    get Scale() {
+       return this._scale; 
+    }
+    
+    get ScaleVec3() {
+        return new Vector3(this._scale[0], this._scale[1], this._scale[2]);
     }
 }
+
+export { SingleSplat };

@@ -5,11 +5,15 @@ import { Quaternion } from "../math/Quaternion";
 import { Converter } from "../utils/Converter";
 import { Matrix4 } from "../math/Matrix4";
 import { Box3 } from "../math/Box3";
+import { SingleSplat } from "./SingleSplat"
+
+import { Constants } from "../utils/Constants";
 
 class Splat extends Object3D {
     public selectedChanged: boolean = false;
     public colorTransformChanged: boolean = false;
 
+    private _splats: Array<SingleSplat> = [];
     private _data: SplatData;
     private _selected: boolean = false;
     private _colorTransforms: Array<Matrix4> = [];
@@ -17,39 +21,51 @@ class Splat extends Object3D {
     private _bounds: Box3;
 
     recalculateBounds: () => void;
+    createSplatsData: () => void;
 
     constructor(splat: SplatData | undefined = undefined) {
         super();
-
+        
+        this._splats = new Array<SingleSplat>();
         this._data = splat || new SplatData();
         this._bounds = new Box3(
             new Vector3(Infinity, Infinity, Infinity),
             new Vector3(-Infinity, -Infinity, -Infinity),
         );
+        
+        this.createSplatsData = () => {
+            console.log("About to create " + (this._data.vertexCount) + " splats!");
+            
+            for(let i = 0; i < this._data.vertexCount; i++) {
+                let position: Float32Array = new Float32Array(this._data.positions.buffer, 3 * i * Constants.BYTE_OFFSET_FLOAT, 3);
+                let rotation: Float32Array = new Float32Array(this._data.rotations.buffer, 4 * i * Constants.BYTE_OFFSET_FLOAT, 4);
+                let scale: Float32Array = new Float32Array(this._data.scales.buffer, 3 * i * Constants.BYTE_OFFSET_FLOAT, 3);
+                
+                let singleSplat = new SingleSplat(position, rotation, scale);
+                this._splats.push(singleSplat)
+            }
+            
+            console.log("Finish")
+            
+        }
 
         this.recalculateBounds = () => {
-            this._bounds = new Box3(
-                new Vector3(Infinity, Infinity, Infinity),
-                new Vector3(-Infinity, -Infinity, -Infinity),
-            );
-            for (let i = 0; i < this._data.vertexCount; i++) {
-                this._bounds.expand(
-                    new Vector3(
-                        this._data.positions[3 * i],
-                        this._data.positions[3 * i + 1],
-                        this._data.positions[3 * i + 2],
-                    ),
-                );
+            for (let i = 0; i < this._splats.length; i++) {
+                this._bounds.expand(this._splats[i].PositionVec3);
             }
-        };
+        }
 
         this.applyPosition = () => {
-            this.data.translate(this.position);
+            this._splats.forEach((splat, index) => {
+                splat.translate(this.position);
+            });
             this.position = new Vector3();
         };
 
         this.applyRotation = () => {
-            this.data.rotate(this.rotation);
+            this._splats.forEach((splat, index) => {
+                splat.rotate(this.rotation);
+            });
             this.rotation = new Quaternion();
         };
 
@@ -57,8 +73,8 @@ class Splat extends Object3D {
             this.data.scale(this.scale);
             this.scale = new Vector3(1, 1, 1);
         };
-
-        this.recalculateBounds();
+        
+        this.createSplatsData();
     }
 
     saveToFile(name: string | null = null, format: string | null = null) {
@@ -96,6 +112,18 @@ class Splat extends Object3D {
 
     get data() {
         return this._data;
+    }
+    
+    get splats() {
+        return this._splats;
+    }
+    
+    public getSplatAtIndex(index: number): SingleSplat | undefined {
+        if (index < 0 || index >= this._splats.length) {
+            console.error("Index out of bounds");
+            return undefined; 
+        }
+        return this._splats[index];
     }
 
     get selected() {

@@ -16,8 +16,6 @@ class SplatData {
     private _selection: Uint8Array;
 
     private removeItemsFromArray: (arr: Float32Array | Uint8Array, start: number, count: number) => Float32Array | Uint8Array;
-    translate: (translation: Vector3) => void;
-    rotate: (rotation: Quaternion) => void;
     scale: (scale: Vector3) => void;
     removeVertex:(index: number) => void;
     removeVertexRange:(index: number, count: number) => void;
@@ -43,16 +41,6 @@ class SplatData {
         this._scales = scales || new Float32Array(0);
         this._colors = colors || new Uint8Array(0);
         this._selection = new Uint8Array(this.vertexCount);
-
-        this.translate = (translation: Vector3) => {
-            for (let i = 0; i < this.vertexCount; i++) {
-                this.positions[3 * i + 0] += translation.x;
-                this.positions[3 * i + 1] += translation.y;
-                this.positions[3 * i + 2] += translation.z;
-            }
-
-            this.changed = true;
-        };
 
         this.removeVertex = (index: number) => {
             if(index < 0 || index >= this._vertexCount) {
@@ -98,34 +86,6 @@ class SplatData {
             newArr.set(part2, part1.length);
             return newArr;
         }
-        
-        this.rotate = (rotation: Quaternion) => {
-            const R = Matrix3.RotationFromQuaternion(rotation).buffer;
-            for (let i = 0; i < this.vertexCount; i++) {
-                const x = this.positions[3 * i + 0];
-                const y = this.positions[3 * i + 1];
-                const z = this.positions[3 * i + 2];
-
-                this.positions[3 * i + 0] = R[0] * x + R[1] * y + R[2] * z;
-                this.positions[3 * i + 1] = R[3] * x + R[4] * y + R[5] * z;
-                this.positions[3 * i + 2] = R[6] * x + R[7] * y + R[8] * z;
-
-                const currentRotation = new Quaternion(
-                    this.rotations[4 * i + 1],
-                    this.rotations[4 * i + 2],
-                    this.rotations[4 * i + 3],
-                    this.rotations[4 * i + 0],
-                );
-
-                const newRot = rotation.multiply(currentRotation);
-                this.rotations[4 * i + 1] = newRot.x;
-                this.rotations[4 * i + 2] = newRot.y;
-                this.rotations[4 * i + 3] = newRot.z;
-                this.rotations[4 * i + 0] = newRot.w;
-            }
-
-            this.changed = true;
-        };
 
         this.scale = (scale: Vector3) => {
             for (let i = 0; i < this.vertexCount; i++) {
