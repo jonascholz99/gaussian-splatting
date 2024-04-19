@@ -8,9 +8,11 @@ import { Box3 } from "../math/Box3";
 import { SingleSplat } from "./SingleSplat"
 
 import { Constants } from "../utils/Constants";
+import {ObjectChangedEvent, RenderedSplatsChangedEvent} from "../events/Events";
 
 class Splat extends Object3D {
     public selectedChanged: boolean = false;
+    public renderNumberChanged: boolean = false;
     public colorTransformChanged: boolean = false;
 
     private _splats: Array<SingleSplat> = [];
@@ -19,6 +21,9 @@ class Splat extends Object3D {
     private _colorTransforms: Array<Matrix4> = [];
     private _colorTransformsMap: Map<number, number> = new Map();
     private _bounds: Box3;
+    
+    private _numberOfSplats: number;
+    private _numberOfRenderedSplats: number;
 
     recalculateBounds: () => void;
     createSplatsData: () => void;
@@ -32,11 +37,16 @@ class Splat extends Object3D {
             new Vector3(Infinity, Infinity, Infinity),
             new Vector3(-Infinity, -Infinity, -Infinity),
         );
+
+        this._numberOfSplats = 0;
+        this._numberOfRenderedSplats = 0
         
         this.createSplatsData = () => {
             
             if(splat != undefined)
             {
+                this._numberOfSplats = splat.vertexCount;
+                this._numberOfRenderedSplats = splat.vertexCount;
                 console.log("About to create " + (splat.vertexCount) + " splats!");
                 console.log("Byte length Color: " + splat.colors.buffer.byteLength)
                 console.log("Byte length Position: " + splat.positions.buffer.byteLength)
@@ -56,7 +66,7 @@ class Splat extends Object3D {
         }
 
         this.recalculateBounds = () => {
-            for (let i = 0; i < this._splats.length; i++) {
+            for (let i = 0; i < this._numberOfSplats; i++) {
                 this._bounds.expand(this._splats[i].PositionVec3);
             }
         }
@@ -66,6 +76,8 @@ class Splat extends Object3D {
                 splat.translate(this.position);
             });
             this.position = new Vector3();
+            
+            this.data.changed = true;
         };
 
         this.applyRotation = () => {
@@ -73,6 +85,8 @@ class Splat extends Object3D {
                 splat.rotate(this.rotation);
             });
             this.rotation = new Quaternion();
+
+            this.data.changed = true;
         };
 
         this.applyScale = () => {
@@ -83,6 +97,8 @@ class Splat extends Object3D {
         };
         
         this.createSplatsData();
+
+        this.data.changed = true;
     }
 
     saveToFile(name: string | null = null, format: string | null = null) {
@@ -106,7 +122,7 @@ class Splat extends Object3D {
         const data = this.serialize();
         let blob;
         if (format === "ply") {
-            const plyData = Converter.SplatToPLY(data.buffer, this.splatCount);
+            const plyData = Converter.SplatToPLY(data.buffer, this._numberOfSplats);
             blob = new Blob([plyData], { type: "application/octet-stream" });
         } else {
             blob = new Blob([data.buffer], { type: "application/octet-stream" });
@@ -127,7 +143,7 @@ class Splat extends Object3D {
     }
     
     getSplatAtIndex(index: number): SingleSplat | undefined {
-        if (index < 0 || index >= this._splats.length) {
+        if (index < 0 || index >= this._numberOfSplats) {
             console.error("Index out of bounds");
             return undefined; 
         }
@@ -145,6 +161,27 @@ class Splat extends Object3D {
             this.dispatchEvent(this._changeEvent);
         }
     }
+    
+    selectSplat(index: number, value: boolean) {
+        this._splats[index].Select(value);
+        this.selectedChanged = value;
+        this.dispatchEvent(this._changeEvent);
+    }
+    
+    renderSplat(index: number, value: boolean)
+    {
+        if (value && this._splats[index].Rendered[0] === 0) {
+            this._numberOfRenderedSplats += 1;
+        } else if (!value && this._splats[index].Rendered[0] === 1) {
+            this._numberOfRenderedSplats -= 1;
+        }
+        
+        this._splats[index].Render(value);
+    }
+    
+    updateRenderingOfSplats() {
+        this.dispatchEvent(this._renderedSplatsChanged);
+    }
 
     get colorTransforms() {
         return this._colorTransforms;
@@ -153,7 +190,7 @@ class Splat extends Object3D {
     get colorTransformsMap() {
         return this._colorTransformsMap;
     }
-
+    
     get bounds() {
         let center = this._bounds.center();
         center = center.add(this.position);
@@ -165,16 +202,20 @@ class Splat extends Object3D {
     }
     
     get splatCount() {
-        return this._splats.length;
+        return this._numberOfSplats;
+    }
+    
+    get numberOfRenderedSplats() {
+        return this._numberOfRenderedSplats;
     }
 
     serialize = () => {
-        const data = new Uint8Array(this._splats.length * SplatData.RowLength);
+        const data = new Uint8Array(this._numberOfSplats * SplatData.RowLength);
 
         const f_buffer = new Float32Array(data.buffer);
         const u_buffer = new Uint8Array(data.buffer);
         
-        for (let i = 0; i < this._splats.length; i++) {
+        for (let i = 0; i < this._numberOfSplats; i++) {
             f_buffer[8 * i + 0] = this._splats[i].Position[0];
             f_buffer[8 * i + 1] = this._splats[i].Position[1];
             f_buffer[8 * i + 2] = this._splats[i].Position[2];
@@ -197,59 +238,128 @@ class Splat extends Object3D {
         return data;
     };
 
-    // reattach = (
-    //     positions: ArrayBufferLike,
-    //     rotations: ArrayBufferLike,
-    //     scales: ArrayBufferLike,
-    //     colors: ArrayBufferLike,
-    //     selection: ArrayBufferLike,
-    // ) => {
-    //     console.assert(
-    //         positions.byteLength === this.splatCount * 3 * 4,
-    //         `Expected ${this.splatCount * 3 * 4} bytes, got ${positions.byteLength} bytes`,
-    //     );
-    //     this._positions = new Float32Array(positions);
-    //     this._rotations = new Float32Array(rotations);
-    //     this._scales = new Float32Array(scales);
-    //     this._colors = new Uint8Array(colors);
-    //     this._selection = new Uint8Array(selection);
-    //     this.detached = false;
-    // };
+    reattach = (
+        positions: ArrayBufferLike,
+        rotations: ArrayBufferLike,
+        scales: ArrayBufferLike,
+        colors: ArrayBufferLike,
+        selection: ArrayBufferLike,
+    ) => {
+        console.assert(
+            positions.byteLength === this._numberOfRenderedSplats * 3 * 4,
+            `Expected ${this._numberOfRenderedSplats * 3 * 4} bytes, got ${positions.byteLength} bytes`,
+        );
+
+        for(let i = 0; i < this._numberOfSplats; i++) {
+            if(this._splats[i].Rendered[0] === 1){
+                let position: Float32Array = new Float32Array(positions, 3 * i * Constants.BYTE_OFFSET_FLOAT, 3);
+                let rotation: Float32Array = new Float32Array(rotations, 4 * i * Constants.BYTE_OFFSET_FLOAT, 4);
+                let scale: Float32Array = new Float32Array(scales, 3 * i * Constants.BYTE_OFFSET_FLOAT, 3);
+                let color: Uint8Array = new Uint8Array(colors, 1 * i * Constants.BYTE_OFFSET_INT, 4);
+                let selected: Uint8Array = new Uint8Array(selection, i, 1);
+
+                this._splats[i].reattach(position, rotation, scale, color, selected);       
+            }
+        }
+        
+        this._data.detached = false;
+    };
     
     get Positions() {
-        let positions = new Float32Array(this._splats.length * 3);
+        let positions = new Float32Array(this._numberOfRenderedSplats * 3);
+        let count = 0;
         
         this._splats.forEach((singleSplat, index) => {
-            positions.set(singleSplat.Position, index * 3);
+            if(singleSplat.Rendered[0] === 1)
+            {
+                positions.set(singleSplat.Position, index * 3);
+                count++;
+            }
         });
-        return positions;
+
+        let finalPosition = new Float32Array(count * 3);
+        finalPosition.set(positions.subarray(0, count * 3));
+        
+        return finalPosition;
     }
     
     get Scales() {
-        let scales = new Float32Array(this._splats.length * 3);
+        let scales = new Float32Array(this._numberOfRenderedSplats * 3);
+        let count = 0;
 
         this._splats.forEach((singleSplat, index) => {
-            scales.set(singleSplat.Scale, index * 3);
+            if(singleSplat.Rendered[0] === 1)
+            {
+                scales.set(singleSplat.Scale, index * 3);
+                count++;
+            }
         });
-        return scales;
+
+        let finalScales = new Float32Array(count * 3);
+        finalScales.set(scales.subarray(0, count * 3));
+        
+        return finalScales;
     }
     
     get Rotations() {
-        let rotations = new Float32Array(this._splats.length * 4);
+        let rotations = new Float32Array(this._numberOfRenderedSplats * 4);
+        let count = 0;
 
         this._splats.forEach((singleSplat, index) => {
-            rotations.set(singleSplat.Rotation, index * 4);
+            if(singleSplat.Rendered[0] === 1)
+            {
+                rotations.set(singleSplat.Rotation, index * 4);
+                count++;
+            }
         });
-        return rotations;
+
+        let finalRotations = new Float32Array(count * 4);
+        finalRotations.set(rotations.subarray(0, count * 4));
+
+        return finalRotations;
     }
     
     get Colors() {
-        let colors = new Uint8Array(this._splats.length * 4);
+        let colors = new Uint8Array(this._numberOfRenderedSplats * 4);
+        let count = 0;
 
         this._splats.forEach((singleSplat, index) => {
-            colors.set(singleSplat.Color, index * 4);
+            if(singleSplat.Rendered[0] === 1) {
+                colors.set(singleSplat.Color, index * 4);
+                count++;
+            }
         });
-        return colors;
+
+        let finalColors = new Float32Array(count * 4);
+        finalColors.set(colors.subarray(0, count * 4));
+
+        return finalColors;
+    }
+    
+    
+    
+    get Selections() {
+        let selections = new Uint8Array(this._numberOfRenderedSplats);
+        let count = 0;
+        
+        let counter = 0;
+        this._splats.forEach((singleSplat, index) => {
+            if(singleSplat.Rendered[0] === 1)
+            {
+                selections.set(singleSplat.Selection, index);
+                if(singleSplat.Selection[0]==1) {
+                    counter++;
+                }   
+                count++;
+            }
+        });
+        
+        console.log("Found " + counter + " selected splats");
+
+        let finalSelections = new Float32Array(count);
+        finalSelections.set(selections.subarray(0, count));
+        
+        return finalSelections;
     }
 }
 

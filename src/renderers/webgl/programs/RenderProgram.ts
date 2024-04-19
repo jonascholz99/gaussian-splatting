@@ -4,7 +4,12 @@ import { ShaderProgram } from "./ShaderProgram";
 import { ShaderPass } from "../passes/ShaderPass";
 import { RenderData } from "../utils/RenderData";
 import { Color32 } from "../../../math/Color32";
-import { ObjectAddedEvent, ObjectChangedEvent, ObjectRemovedEvent } from "../../../events/Events";
+import {
+    ObjectAddedEvent,
+    ObjectChangedEvent,
+    ObjectRemovedEvent,
+    RenderedSplatsChangedEvent
+} from "../../../events/Events";
 import { Splat } from "../../../splats/Splat";
 import { WebGLRenderer } from "../../WebGLRenderer";
 import { Scene } from "../../../core/Scene"
@@ -235,12 +240,13 @@ class RenderProgram extends ShaderProgram {
             }
 
             this._resize();
-
+            
             this._scene.addEventListener("objectAdded", handleObjectAdded);
             this._scene.addEventListener("objectRemoved", handleObjectRemoved);
             for (const object of this._scene.objects) {
                 if (object instanceof Splat) {
                     object.addEventListener("objectChanged", handleObjectChanged);
+                    object.addEventListener("renderedSplatsChanged", handleRenderedSplatsChanged);
                 }
             }
 
@@ -317,9 +323,16 @@ class RenderProgram extends ShaderProgram {
             resetSplatData();
         };
 
+        const handleRenderedSplatsChanged = (event: Event) => {
+            const e = event as RenderedSplatsChangedEvent;
+            
+            resetSplatData();
+        };
+
         const handleObjectChanged = (event: Event) => {
             const e = event as ObjectChangedEvent;
 
+            console.log("Changed")
             if (e.object instanceof Splat && this._renderData) {
                 this._renderData.markDirty(e.object);
             }
@@ -501,6 +514,7 @@ class RenderProgram extends ShaderProgram {
             for (const object of this._scene.objects) {
                 if (object instanceof Splat) {
                     object.removeEventListener("objectChanged", handleObjectChanged);
+                    object.removeEventListener("renderedSplatsChanged", handleObjectChanged);
                 }
             }
 

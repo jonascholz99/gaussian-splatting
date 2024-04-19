@@ -13,11 +13,12 @@ class SingleSplat {
     private _rotation: Float32Array;
     private _scale: Float32Array;
     private _color: Uint8Array;
+    private _bounds: Box3;
+    private _selected: Uint8Array;
+    private _rendered: Uint8Array;
     
-    private _selected: boolean = false;
     private _colorTransforms: Array<Matrix4> = [];
     private _colorTransformsMap: Map<number, number> = new Map();
-    private _bounds: Box3;
 
     recalculateBounds: () => void;
     translate: (translation: Vector3) => void;
@@ -29,6 +30,8 @@ class SingleSplat {
         this._rotation = rotation;
         this._scale = scale;
         this._color = color;
+        this._selected = new Uint8Array([0]);
+        this._rendered = new Uint8Array([1]);
         
         this._bounds = new Box3(
             new Vector3(Infinity, Infinity, Infinity),
@@ -76,7 +79,7 @@ class SingleSplat {
 
             this.changed = true;
         };
-
+        
         this.scale = (scale: Vector3) => {
             this._position[0] *= scale.x;
             this._position[1] *= scale.y;
@@ -93,6 +96,31 @@ class SingleSplat {
         this.recalculateBounds();
     }
 
+    reattach(position: Float32Array, rotation: Float32Array, scale: Float32Array, color: Uint8Array, selection: Uint8Array) {
+        this._position = position;
+        this._rotation = rotation;
+        this._scale = scale;
+        this._color = color;
+        this._selected = selection;
+    }
+    
+    Select(select: boolean) {
+        if(select)
+        {
+            this._selected[0] = 1;
+        } else {
+            this._selected[0] = 0;
+        }         
+    }
+    
+    Render(render: boolean) {
+        if(render) {
+            this._rendered[0] = 1;
+        } else {
+            this._rendered[0] = 0;
+        }
+    }
+    
     get bounds() {
         let center = this._bounds.center();
         center = center.add(this.PositionVec3);
@@ -125,6 +153,14 @@ class SingleSplat {
     
     get Rotation() {
         return this._rotation;
+    }
+    
+    get Selection() {
+        return this._selected;
+    }
+    
+    get Rendered() {
+        return this._rendered;
     }
 }
 

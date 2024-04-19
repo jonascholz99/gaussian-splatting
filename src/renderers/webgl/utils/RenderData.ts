@@ -41,6 +41,7 @@ class RenderData {
     dispose: () => void;
 
     constructor(scene: Scene) {
+        console.log("new RenderData")
         let vertexCount = 0;
         let splatIndex = 0;
         this._splatIndices = new Map<Splat, number>();
@@ -99,6 +100,7 @@ class RenderData {
             splat.rotationChanged = false;
             splat.scaleChanged = false;
             splat.selectedChanged = false;
+            splat.renderNumberChanged = false;
             this.transformsChanged = true;
         };
 
@@ -186,6 +188,8 @@ class RenderData {
         }
 
         const buildImmediate = (splat: Splat) => {
+            
+            console.log("Build imm")
             if (!wasmModule) {
                 waitForWasm().then(() => {
                     buildImmediate(splat);
@@ -209,7 +213,7 @@ class RenderData {
             wasmModule.HEAPF32.set(splat.Rotations, rotationsPtr / 4);
             wasmModule.HEAPF32.set(splat.Scales, scalesPtr / 4);
             wasmModule.HEAPU8.set(splat.Colors, colorsPtr);
-            wasmModule.HEAPU8.set(splat.data.selection, selectionPtr);
+            wasmModule.HEAPU8.set(splat.Selections, selectionPtr);
 
             wasmModule._pack(
                 splat.selected,
@@ -270,9 +274,9 @@ class RenderData {
             if (splat.colorTransformChanged) {
                 updateColorTransforms();
             }
-
-            if (!splat.data.changed || splat.data.detached) return;
-
+            
+            if (!splat.data.changed || splat.data.detached || !splat.renderNumberChanged) return;
+            
             const serializedSplat = {
                 position: new Float32Array(splat.position.flat()),
                 rotation: new Float32Array(splat.rotation.flat()),
@@ -283,7 +287,7 @@ class RenderData {
                 rotations: splat.Rotations,
                 scales: splat.Scales,
                 colors: splat.Colors,
-                selection: splat.data.selection,
+                selection: splat.Selections,
                 offset: this._offsets.get(splat) as number,
             };
 
@@ -347,7 +351,7 @@ class RenderData {
 
         updateColorTransforms();
     }
-
+    
     get offsets() {
         return this._offsets;
     }
