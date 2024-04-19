@@ -1,6 +1,6 @@
 {
     "name": "@jonascholz/gaussian-splatting",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "description": "modified JavaScript Gaussian Splatting library from gsplat.js",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
