@@ -2,7 +2,7 @@ import { Vector3 } from "../math/Vector3";
 import { Quaternion } from "../math/Quaternion";
 import { EventDispatcher } from "../events/EventDispatcher";
 import { Matrix4 } from "../math/Matrix4";
-import { ObjectChangedEvent } from "../events/Events";
+import {ObjectChangedEvent, RenderedSplatsChangedEvent} from "../events/Events";
 
 abstract class Object3D extends EventDispatcher {
     public positionChanged: boolean = false;
@@ -15,6 +15,7 @@ abstract class Object3D extends EventDispatcher {
     protected _transform: Matrix4 = new Matrix4();
 
     protected _changeEvent = new ObjectChangedEvent(this);
+    protected _renderedSplatsChanged = new RenderedSplatsChangedEvent(this);
 
     update: () => void;
     applyPosition: () => void;

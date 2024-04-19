@@ -18,4 +18,10 @@ class ObjectChangedEvent extends Event {
     }
 }
 
-export { ObjectAddedEvent, ObjectRemovedEvent, ObjectChangedEvent };
+class RenderedSplatsChangedEvent extends Event {
+    constructor(public object: Object3D) {
+        super("renderedSplatsChanged");
+    }
+}
+
+export { ObjectAddedEvent, ObjectRemovedEvent, ObjectChangedEvent, RenderedSplatsChangedEvent };
