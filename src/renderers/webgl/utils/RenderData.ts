@@ -3,6 +3,7 @@ import { Splat } from "../../../splats/Splat";
 import DataWorker from "web-worker:./DataWorker.ts";
 import loadWasm from "../../../wasm/data";
 import { Matrix4 } from "../../../math/Matrix4";
+import {SingleSplat} from "../../../splats/SingleSplat";
 
 class RenderData {
     public dataChanged = false;
@@ -10,7 +11,9 @@ class RenderData {
     public colorTransformsChanged = false;
 
     private _splatIndices: Map<Splat, number>;
+    private _singleSplatIndices: Map<SingleSplat, number>;
     private _offsets: Map<Splat, number>;
+    private _singleOffsets: Map<SingleSplat, number>;
     private _data: Uint32Array;
     private _width: number;
     private _height: number;
@@ -41,12 +44,14 @@ class RenderData {
     dispose: () => void;
 
     constructor(scene: Scene) {
-        console.log("new RenderData")
         let vertexCount = 0;
         let splatIndex = 0;
         this._splatIndices = new Map<Splat, number>();
+        this._singleSplatIndices = new Map<SingleSplat, number>();
         this._offsets = new Map<Splat, number>();
+        this._singleOffsets = new Map<SingleSplat, number>();
         const lookup = new Map<number, Splat>();
+        const singlelookup = new Map<number, SingleSplat>();
         for (const object of scene.objects) {
             if (object instanceof Splat) {
                 this._splatIndices.set(object, splatIndex);
@@ -54,6 +59,13 @@ class RenderData {
                 lookup.set(vertexCount, object);
                 vertexCount += object.splatCount;
                 splatIndex++;
+                
+                for(let singleSplat of object.splats) {
+                    this._singleSplatIndices.set(singleSplat, splatIndex);
+                    this._singleOffsets.set(singleSplat, splatIndex);
+                    singlelookup.set(vertexCount, singleSplat);
+                    splatIndex++;
+                }
             }
         }
 
@@ -189,7 +201,6 @@ class RenderData {
 
         const buildImmediate = (splat: Splat) => {
             
-            console.log("Build imm")
             if (!wasmModule) {
                 waitForWasm().then(() => {
                     buildImmediate(splat);
@@ -354,6 +365,10 @@ class RenderData {
     
     get offsets() {
         return this._offsets;
+    }
+
+    get singleOffsets() {
+        return this._singleOffsets;
     }
 
     get data() {

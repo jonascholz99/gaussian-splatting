@@ -47,9 +47,7 @@ class Splat extends Object3D {
             {
                 this._numberOfSplats = splat.vertexCount;
                 this._numberOfRenderedSplats = splat.vertexCount;
-                console.log("About to create " + (splat.vertexCount) + " splats!");
-                console.log("Byte length Color: " + splat.colors.buffer.byteLength)
-                console.log("Byte length Position: " + splat.positions.buffer.byteLength)
+                
                 for(let i = 0; i < splat.vertexCount; i++) {
                     let position: Float32Array = new Float32Array(splat.positions.buffer, 3 * i * Constants.BYTE_OFFSET_FLOAT, 3);
                     let rotation: Float32Array = new Float32Array(splat.rotations.buffer, 4 * i * Constants.BYTE_OFFSET_FLOAT, 4);
@@ -59,8 +57,6 @@ class Splat extends Object3D {
                     let singleSplat = new SingleSplat(position, rotation, scale, color);
                     this._splats.push(singleSplat)
                 }
-
-                console.log("Finish")
             }
             
         }
@@ -354,8 +350,6 @@ class Splat extends Object3D {
             }
         });
         
-        console.log("Found " + counter + " selected splats");
-
         let finalSelections = new Float32Array(count);
         finalSelections.set(selections.subarray(0, count));
         

@@ -27,5 +27,6 @@ export { ShaderProgram } from "./renderers/webgl/programs/ShaderProgram";
 export { RenderProgram } from "./renderers/webgl/programs/RenderProgram";
 export { VideoRenderProgram } from "./renderers/webgl/programs/VideoRenderProgram";
 export { IntersectionTester } from "./renderers/webgl/utils/IntersectionTester";
+export { Raycaster } from "./renderers/webgl/utils/Raycaster";
 
 export { Constants } from "./utils/Constants"

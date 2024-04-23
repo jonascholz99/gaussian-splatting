@@ -47,6 +47,13 @@ class Box3 {
         this.min = new Vector3(Math.min(min.x, max.x), Math.min(min.y, max.y), Math.min(min.z, max.z));
         this.max = new Vector3(Math.max(min.x, max.x), Math.max(min.y, max.y), Math.max(min.z, max.z));
     }
+    
+    public surfaceArea(): number {
+        const width = this.max.x - this.min.x;
+        const height = this.max.y - this.min.y;
+        const depth = this.max.z - this.min.z;
+        return 2 * ((width * height) + (width * depth) + (height * depth));
+    }
 }
 
 export { Box3 };

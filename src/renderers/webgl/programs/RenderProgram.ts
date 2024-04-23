@@ -331,8 +331,7 @@ class RenderProgram extends ShaderProgram {
 
         const handleObjectChanged = (event: Event) => {
             const e = event as ObjectChangedEvent;
-
-            console.log("Changed")
+            
             if (e.object instanceof Splat && this._renderData) {
                 this._renderData.markDirty(e.object);
             }

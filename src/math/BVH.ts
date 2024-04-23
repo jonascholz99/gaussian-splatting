@@ -1,4 +1,5 @@
 import { Box3 } from "./Box3";
+import { Vector3 } from "./Vector3";
 
 class BVHNode {
     public left: BVHNode | null = null;
@@ -16,7 +17,7 @@ class BVHNode {
             this.pointIndices = pointIndices;
         }
     }
-
+    
     private split(bounds: Box3, boxes: Box3[], pointIndices: number[]) {
         const axis = bounds.size().maxComponent();
         pointIndices.sort((a, b) => boxes[a].center().getComponent(axis) - boxes[b].center().getComponent(axis));
