@@ -9,8 +9,12 @@ class BVHNode {
     public bounds: Box3;
     public objects: SingleSplat[] = [];
 
-    constructor(objects: SingleSplat[]) {
+    constructor(objects: SingleSplat[] | undefined = undefined) {
         this.bounds = new Box3(new Vector3(Infinity, Infinity, Infinity), new Vector3(-Infinity, -Infinity, -Infinity));
+        
+        if(objects === undefined)
+            return;
+        
         objects.forEach(obj => {
             this.bounds.expand(obj.bounds.min);
             this.bounds.expand(obj.bounds.max);

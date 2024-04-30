@@ -39,7 +39,19 @@ class SingleSplat {
         );
 
         this.recalculateBounds = () => {
-            this._bounds.expand(new Vector3(this._position[0], this._position[1], this._position[2]))
+            let minVec = new Vector3(
+                this._position[0] - this._scale[0],
+                this._position[1] - this._scale[1],
+                this._position[2] - this._scale[2]
+            );
+            let maxVec = new Vector3(
+                this._position[0] + this._scale[0],
+                this._position[1] + this._scale[1],
+                this._position[2] + this._scale[2]
+            );
+
+            this._bounds.min = minVec;
+            this._bounds.max = maxVec;
         };
 
 
@@ -122,13 +134,7 @@ class SingleSplat {
     }
     
     get bounds() {
-        let center = this._bounds.center();
-        center = center.add(this.PositionVec3);
-
-        let size = this._bounds.size();
-        size = size.multiply(this.ScaleVec3);
-
-        return new Box3(center.subtract(size.divide(2)), center.add(size.divide(2)));
+        return this._bounds;
     }
     
     get PositionVec3() {

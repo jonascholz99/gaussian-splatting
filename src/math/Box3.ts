@@ -28,6 +28,22 @@ class Box3 {
         );
     }
 
+    public intersectsBasedOnCenter(box: Box3) {
+        const centerA = this.center();
+        const centerB = box.center();
+
+        const sizeA = this.size();
+        const sizeB = box.size();
+
+        
+        return (
+            Math.abs(centerA.x - centerB.x) <= (sizeA.x / 2 + sizeB.x / 2) &&
+            Math.abs(centerA.y - centerB.y) <= (sizeA.y / 2 + sizeB.y / 2) &&
+            Math.abs(centerA.z - centerB.z) <= (sizeA.z / 2 + sizeB.z / 2)
+        );
+    }
+
+
     public size() {
         return this.max.subtract(this.min);
     }
