@@ -21,7 +21,7 @@ class IntersectionTester {
         let singleSplatLookup: SingleSplat[] = [];
 
         const build = () => {
-            if (renderProgram.renderData === null) {
+            if(renderProgram.renderData === null) {
                 console.error("IntersectionTester cannot be called before renderProgram has been initialized");
                 return;
             }
