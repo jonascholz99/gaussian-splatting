@@ -124,7 +124,21 @@ class SingleSplat {
             this._selected[0] = 0;
         }         
     }
-    
+
+    SelectAsync(select: boolean): Promise<void> {
+        return new Promise((resolve, reject) => {
+            try {
+                if (select) {
+                    this._selected[0] = 1;
+                } else {
+                    this._selected[0] = 0;
+                }
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
     Render(render: boolean) {
         if(render) {
             this._rendered[0] = 1;

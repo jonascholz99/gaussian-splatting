@@ -11,9 +11,12 @@ export class WebGLRenderer {
     private _gl: WebGL2RenderingContext;
     private _backgroundColor: Color32 = new Color32();
     private _renderProgram: RenderProgram;
+    
+    private _customPrograms: ShaderProgram[];
 
     addProgram: (program: ShaderProgram) => void;
     removeProgram: (program: ShaderProgram) => void;
+    removeAllPrograms: () => void;
     resize: () => void;
     setSize: (width: number, height: number) => void;
     render: (scene: Scene, camera: Camera) => void;
@@ -39,8 +42,9 @@ export class WebGLRenderer {
         if (!optionalRenderPasses) {
             renderPasses.push(new FadeInPass());
         }
-
+        
         this._renderProgram = new RenderProgram(this, renderPasses);
+        this._customPrograms = [];
         const programs = [this._renderProgram] as ShaderProgram[];
 
         this.resize = () => {
@@ -74,6 +78,7 @@ export class WebGLRenderer {
 
         this.addProgram = (program: ShaderProgram) => {
             programs.push(program);
+            this._customPrograms?.push(program);
         };
 
         this.removeProgram = (program: ShaderProgram) => {
@@ -82,6 +87,14 @@ export class WebGLRenderer {
                 throw new Error("Program not found");
             }
             programs.splice(index, 1);
+        };
+
+        this.removeAllPrograms = () => {
+            for(let i = 0; i < this._customPrograms.length; i++) {
+                var program = this._customPrograms.pop();
+                if(program != undefined)
+                    this.removeProgram(program);
+            }
         };
 
         this.resize();

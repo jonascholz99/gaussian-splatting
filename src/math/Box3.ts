@@ -1,4 +1,6 @@
 import { Vector3 } from "./Vector3";
+import {WebGLRenderer} from "../renderers/WebGLRenderer";
+import {CubeVisualisationProgram} from "../renderers/webgl/programs/individual/CubeVisualisationProgram";
 
 class Box3 {
     constructor(

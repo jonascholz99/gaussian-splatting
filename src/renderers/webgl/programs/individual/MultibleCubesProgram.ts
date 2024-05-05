@@ -22,17 +22,14 @@ void main() {
 }
 `;
 
-class CubeVisualisationProgram extends ShaderProgram {
+class MultibleCubesProgram extends ShaderProgram {
     protected _initialize: () => void;
     protected _resize: () => void;
     protected _render: () => void;
     protected _dispose: () => void;
 
 
-    constructor(renderer: WebGLRenderer, passes: ShaderPass[], points: Float32Array[], color: Float32Array = new Float32Array([1, 0, 0, 0.2])) {
-        if(points.length !== (2 || 8)) {
-            console.log("Please provide 2 oder 8 corners")
-        }
+    constructor(renderer: WebGLRenderer, passes: ShaderPass[], upperLeftCorners: Float32Array[], bottomRightCorners: Float32Array[], color: Float32Array = new Float32Array([1, 0, 0, 0.2])) {
         super(renderer, passes);
 
         const gl = renderer.gl;
@@ -45,15 +42,17 @@ class CubeVisualisationProgram extends ShaderProgram {
         let u_view: WebGLUniformLocation;
         let u_color: WebGLUniformLocation;
 
-        let corners: Float32Array;
-        let surface: Float32Array;
+        let tempAllCorners = [];
+        let tempAllSurface = [];
         
-        if(points.length === 2) {
-            const [x1, y1, z1] = points[0];
-            const [x2, y2, z2] = points[1];
+        let numberOfCubes = upperLeftCorners.length;
+        
+        for(var i = 0; i < numberOfCubes; i++) {
+            const [x1, y1, z1] = upperLeftCorners[i];
+            const [x2, y2, z2] = bottomRightCorners[i];
 
 
-            corners = new Float32Array([
+            const corners = new Float32Array([
                 x1, y1, z1, x2, y1, z1,  // Linie von P1 zu P2
                 x1, y1, z1, x1, y2, z1,  // Linie von P1 zu P3
                 x1, y1, z1, x1, y1, z2,  // Linie von P1 zu P5
@@ -67,9 +66,10 @@ class CubeVisualisationProgram extends ShaderProgram {
                 x2, y1, z2, x2, y2, z2,  // Linie von P6 zu P8
                 x1, y2, z2, x2, y2, z2   // Linie von P7 zu P8
             ]);
+            tempAllCorners.push(...corners);
 
 
-            surface = new Float32Array([
+            const surface = new Float32Array([
                 x1, y1, z1, x2, y1, z1, x1, y2, z1, x2, y1, z1, x2, y2, z1, x1, y2, z1,
                 x1, y1, z2, x2, y1, z2, x1, y2, z2, x2, y1, z2, x2, y2, z2, x1, y2, z2,
                 x1, y1, z1, x1, y1, z2, x1, y2, z1, x1, y2, z2, x1, y1, z2, x1, y2, z1,
@@ -77,41 +77,11 @@ class CubeVisualisationProgram extends ShaderProgram {
                 x1, y1, z1, x2, y1, z1, x1, y1, z2, x2, y1, z2, x2, y1, z1, x1, y1, z2,
                 x1, y2, z1, x2, y2, z1, x1, y2, z2, x2, y2, z2, x2, y2, z1, x1, y2, z2
             ])
-        } else {
-            const [x1, y1, z1] = points[0];
-            const [x2, y2, z2] = points[1];
-            const [x3, y3, z3] = points[2];
-            const [x4, y4, z4] = points[3];
-            const [x5, y5, z5] = points[4];
-            const [x6, y6, z6] = points[5];
-            const [x7, y7, z7] = points[6];
-            const [x8, y8, z8] = points[7];
-
-            corners = new Float32Array([
-                x1, y1, z1, x2, y2, z2,  // Linie von P1 zu P2
-                x1, y1, z1, x3, y3, z3,  // Linie von P1 zu P3
-                x1, y1, z1, x5, y5, z5,  // Linie von P1 zu P5
-                x2, y2, z2, x4, y4, z4,  // Linie von P2 zu P4
-                x2, y2, z2, x6, y6, z6,  // Linie von P2 zu P6
-                x3, y3, z3, x4, y4, z4,  // Linie von P3 zu P4
-                x3, y3, z3, x7, y7, z7,  // Linie von P3 zu P7
-                x5, y5, z5, x6, y6, z6,  // Linie von P5 zu P6
-                x5, y5, z5, x7, y7, z7,  // Linie von P5 zu P7
-                x4, y4, z4, x8, y8, z8,  // Linie von P4 zu P8
-                x6, y6, z6, x8, y8, z8,  // Linie von P6 zu P8
-                x7, y7, z7, x8, y8, z8   // Linie von P7 zu P8
-            ]);
-
-
-            surface = new Float32Array([
-                x1, y1, z1, x2, y2, z2, x3, y3, z3, x2, y2, z2, x4, y4, z4, x3, y3, z3,
-                x5, y5, z5, x6, y6, z6, x7, y7, z7, x6, y6, z6, x8, y8, z8, x7, y7, z7,
-                x1, y1, z1, x5, y5, z5, x3, y3, z3, x7, y7, z7, x5, y5, z5, x3, y3, z3,
-                x2, y2, z2, x6, y6, z6, x4, y4, z4, x8, y8, z8, x6, y6, z6, x4, y4, z4,
-                x1, y1, z1, x2, y2, z2, x5, y5, z5, x6, y6, z6, x2, y2, z2, x5, y5, z5,
-                x3, y3, z3, x4, y4, z4, x7, y7, z7, x8, y8, z8, x4, y4, z4, x7, y7, z7
-            ])
+            tempAllSurface.push(...surface);
         }
+
+        let allCorners = new Float32Array(tempAllCorners);
+        let allsurface = new Float32Array(tempAllSurface);
         
 
         const colorLines = new Float32Array([0, 0, 0, 1]);
@@ -133,7 +103,7 @@ class CubeVisualisationProgram extends ShaderProgram {
             gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
             gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
             gl.vertexAttribPointer(positionAttribute, 3, gl.FLOAT, false, 0, 0);
-            gl.drawArrays(gl.LINES, 0, 24);
+            gl.drawArrays(gl.LINES, 0, 24 * numberOfCubes);
         };
 
         const drawCube = (vertices: Float32Array, color: Float32Array) => {
@@ -142,9 +112,9 @@ class CubeVisualisationProgram extends ShaderProgram {
             gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
             gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
             gl.vertexAttribPointer(positionAttribute, 3, gl.FLOAT, false, 0, 0);
-            gl.drawArrays(gl.TRIANGLES, 0, 36);
+            gl.drawArrays(gl.TRIANGLES, 0, 36 * numberOfCubes);
         };
-        
+
         this._render = () => {
             if (!this._camera) {
                 throw new Error("Camera not set");
@@ -156,12 +126,12 @@ class CubeVisualisationProgram extends ShaderProgram {
             gl.uniformMatrix4fv(u_projection, false, this._camera.data.projectionMatrix.buffer);
             gl.uniformMatrix4fv(u_view, false, this._camera.data.viewMatrix.buffer);
 
-            drawCubeLines(corners, colorLines);
-            drawCube(surface, color)
+            drawCubeLines(allCorners, colorLines);
+            drawCube(allsurface, color)
         };
 
         this._resize = () => {};
-        
+
         this._dispose = () => {};
     }
 
@@ -172,7 +142,7 @@ class CubeVisualisationProgram extends ShaderProgram {
     protected _getVertexSource(): string {
         return axisVertexShader;
     }
-    
+
 }
 
-export { CubeVisualisationProgram }
+export { MultibleCubesProgram }

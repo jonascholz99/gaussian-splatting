@@ -7,7 +7,7 @@ class CameraData {
     private _fx: number = 1132;
     private _fy: number = 1132;
     private _near: number = 0.1;
-    private _far: number = 100;
+    private _far: number = 30;
 
     private _width: number = 512;
     private _height: number = 512;

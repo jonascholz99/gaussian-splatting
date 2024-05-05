@@ -1,4 +1,7 @@
 import { Quaternion } from "../math/Quaternion";
+import {WebGLRenderer} from "../renderers/WebGLRenderer";
+import {Vector3} from "../math/Vector3";
+import {CubeVisualisationProgram} from "../renderers/webgl/programs/individual/CubeVisualisationProgram";
 
 class Converter {
     public static SH_C0 = 0.28209479177387814;

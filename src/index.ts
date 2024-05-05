@@ -31,4 +31,5 @@ export { Raycaster } from "./renderers/webgl/utils/Raycaster";
 
 export { Constants } from "./utils/Constants"
 export { AxisProgram } from "./renderers/webgl/programs/individual/AxisProgram"
-export { CubeVisualisationProgram } from "./renderers/webgl/programs/individual/CubeVisualisationProgram" 
+export { CubeVisualisationProgram } from "./renderers/webgl/programs/individual/CubeVisualisationProgram"
+export { MultibleCubesProgram } from "./renderers/webgl/programs/individual/MultibleCubesProgram"
