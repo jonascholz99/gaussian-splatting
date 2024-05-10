@@ -4,6 +4,7 @@ import { Box3 } from "../math/Box3";
 import { Vector3 } from "../math/Vector3";
 import { Quaternion } from "../math/Quaternion";
 import { Matrix3 } from "../math/Matrix3";
+import {Vector4} from "../math/Vector4";
 
 class SingleSplat {
 
@@ -145,6 +146,11 @@ class SingleSplat {
         } else {
             this._rendered[0] = 0;
         }
+    }
+    
+    ChangeColor(colorVector: Vector4) {
+        let color = new Uint8Array([colorVector.x, colorVector.y, colorVector.z, colorVector.w]);
+        this._color = color;
     }
     
     get bounds() {
