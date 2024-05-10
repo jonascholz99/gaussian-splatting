@@ -11,6 +11,7 @@ declare class SingleSplat {
     private _bounds;
     private _selected;
     private _rendered;
+    private _defaultColor;
     private _colorTransforms;
     private _colorTransformsMap;
     recalculateBounds: () => void;
@@ -22,7 +23,7 @@ declare class SingleSplat {
     Select(select: boolean): void;
     SelectAsync(select: boolean): Promise<void>;
     Render(render: boolean): void;
-    ChangeColor(colorVector: Vector4): void;
+    ChangeColor(colorVector: Vector4 | undefined): void;
     get bounds(): Box3;
     get PositionVec3(): Vector3;
     get Position(): Float32Array;

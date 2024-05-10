@@ -18,6 +18,8 @@ class SingleSplat {
     private _selected: Uint8Array;
     private _rendered: Uint8Array;
     
+    private _defaultColor: Uint8Array;
+    
     private _colorTransforms: Array<Matrix4> = [];
     private _colorTransformsMap: Map<number, number> = new Map();
 
@@ -31,6 +33,7 @@ class SingleSplat {
         this._rotation = rotation;
         this._scale = scale;
         this._color = color;
+        this._defaultColor = color;
         this._selected = new Uint8Array([0]);
         this._rendered = new Uint8Array([1]);
         
@@ -148,7 +151,12 @@ class SingleSplat {
         }
     }
     
-    ChangeColor(colorVector: Vector4) {
+    ChangeColor(colorVector: Vector4 | undefined) {
+        if(colorVector === undefined) {
+            // means to set back to default color
+            this._color = this._defaultColor;
+            return;  
+        } 
         let color = new Uint8Array([colorVector.x, colorVector.y, colorVector.z, colorVector.w]);
         this._color = color;
     }
