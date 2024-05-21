@@ -16,25 +16,22 @@ class SingleSplat {
 
     private _defaultColor: Uint8Array;
     
-    
-    public changed = false;
-    
-    private _position: Float32Array;
-    private _rotation: Float32Array;
-    private _scale: Float32Array;
-    private _color: Uint8Array;
-    private _selected: Uint8Array;
-    private _rendered: Uint8Array;
-    
-    private _colorTransforms: Array<Matrix4> = [];
-    private _colorTransformsMap: Map<number, number> = new Map();
+    // private _position: Float32Array;
+    // private _rotation: Float32Array;
+    // private _scale: Float32Array;
+    // private _color: Uint8Array;
+    // private _selected: Uint8Array;
+    // private _rendered: Uint8Array;
+    //
+    // private _colorTransforms: Array<Matrix4> = [];
+    // private _colorTransformsMap: Map<number, number> = new Map();
 
     recalculateBounds: () => void;
     translate: (translation: Vector3) => void;
     rotate: (rotation: Quaternion) => void;
     scale: (scale: Vector3) => void;
     
-    constructor(position: Float32Array, rotation: Float32Array, scale: Float32Array, color: Uint8Array, index: number, data: SplatData) {
+    constructor(index: number, data: SplatData) { //position: Float32Array, rotation: Float32Array, scale: Float32Array, color: Uint8Array,
         this._index = index;
         this._data = data;
 
@@ -44,23 +41,26 @@ class SingleSplat {
         );
         this._defaultColor = new Uint8Array(data.colors.subarray(index * 4, index * 4 + 4));
         
-        this._position = position;
-        this._rotation = rotation;
-        this._scale = scale;
-        this._color = color;
-        this._selected = new Uint8Array([0]);
-        this._rendered = new Uint8Array([1]);
+        // this._position = position;
+        // this._rotation = rotation;
+        // this._scale = scale;
+        // this._color = color;
+        // this._selected = new Uint8Array([0]);
+        // this._rendered = new Uint8Array([1]);
 
         this.recalculateBounds = () => {
+            const pos = this.Position;
+            const scl = this.Scale;
+            
             this._bounds.min = new Vector3(
-                this._position[0] - this._scale[0],
-                this._position[1] - this._scale[1],
-                this._position[2] - this._scale[2]
+                pos[0] - scl[0],
+                pos[1] - scl[1],
+                pos[2] - scl[2]
             );
             this._bounds.max = new Vector3(
-                this._position[0] + this._scale[0],
-                this._position[1] + this._scale[1],
-                this._position[2] + this._scale[2]
+                pos[0] + scl[0],
+                pos[1] + scl[1],
+                pos[2] + scl[2]
             );
         };
 
@@ -73,8 +73,6 @@ class SingleSplat {
             // this._position[0] += translation.x;
             // this._position[1] += translation.y;
             // this._position[2] += translation.z;
-
-            this.changed = true;
         };
 
         this.rotate = (rotation: Quaternion) => {
@@ -121,9 +119,6 @@ class SingleSplat {
             // this._rotation[2] = newRot.y;
             // this._rotation[3] = newRot.z;
             // this._rotation[0] = newRot.w;
-            
-
-            this.changed = true;
         };
         
         this.scale = (scale: Vector3) => {
@@ -145,9 +140,6 @@ class SingleSplat {
             // this._scale[0] *= scale.x;
             // this._scale[1] *= scale.y;
             // this._scale[2] *= scale.z;
-            
-
-            this.changed = true;
         };
         
         this.recalculateBounds();
@@ -233,7 +225,8 @@ class SingleSplat {
     }
     
     get PositionVec3() {
-        return new Vector3(this._position[0], this._position[1], this._position[2]);
+        const pos = this.Position;
+        return new Vector3(pos[0], pos[1], pos[2]);
     }
     
     // get Position() {
@@ -245,7 +238,8 @@ class SingleSplat {
     // }
     
     get ScaleVec3() {
-        return new Vector3(this._scale[0], this._scale[1], this._scale[2]);
+        const scale = this.Scale;
+        return new Vector3(scale[0], scale[1], scale[2]);
     }
     
     // get Color() {

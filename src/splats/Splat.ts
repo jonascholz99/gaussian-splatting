@@ -50,12 +50,12 @@ class Splat extends Object3D {
                 this._numberOfRenderedSplats = splat.vertexCount;
                 
                 for(let i = 0; i < splat.vertexCount; i++) {
-                    let position: Float32Array = new Float32Array(splat.positions.buffer, 3 * i * Constants.BYTE_OFFSET_FLOAT, 3);
-                    let rotation: Float32Array = new Float32Array(splat.rotations.buffer, 4 * i * Constants.BYTE_OFFSET_FLOAT, 4);
-                    let scale: Float32Array = new Float32Array(splat.scales.buffer, 3 * i * Constants.BYTE_OFFSET_FLOAT, 3);
-                    let color: Uint8Array = new Uint8Array(splat.colors.buffer, 1 * i * Constants.BYTE_OFFSET_INT, 4);
+                    // let position: Float32Array = new Float32Array(splat.positions.buffer, 3 * i * Constants.BYTE_OFFSET_FLOAT, 3);
+                    // let rotation: Float32Array = new Float32Array(splat.rotations.buffer, 4 * i * Constants.BYTE_OFFSET_FLOAT, 4);
+                    // let scale: Float32Array = new Float32Array(splat.scales.buffer, 3 * i * Constants.BYTE_OFFSET_FLOAT, 3);
+                    // let color: Uint8Array = new Uint8Array(splat.colors.buffer, 1 * i * Constants.BYTE_OFFSET_INT, 4);
                     
-                    let singleSplat = new SingleSplat(position, rotation, scale, color, i, this._data);
+                    let singleSplat = new SingleSplat(i, this._data);
                     this._splats.push(singleSplat)
                 }
             }
