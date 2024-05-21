@@ -68,10 +68,10 @@ document.getElementById('select-all').addEventListener('click', async function()
     clearSelection();
 
     splat.splats.forEach(async singleSplat => {        
-        singleSplat.Select(true);      
+        singleSplat.Selected = 1;      
         currentlySelectedSplats.push(singleSplat);                       
     })
-    splat.updateRenderingOfSplats();  
+    splat.applySelection();      
 });
 
 // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -82,34 +82,11 @@ document.getElementById('select-none').addEventListener('click', async function(
     clearSelection();
 
     splat.splats.forEach(async singleSplat => {        
-        singleSplat.Select(false);       
+        singleSplat.Selected = 0;       
     })
     splat.updateRenderingOfSplats();  
 });
 
-// :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-//                                         show all
-// :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-document.getElementById('show-all').addEventListener('click', async function() {
-    document.getElementById('side-menu').style.left = '-300px'; // Menü schließen
-
-    splat.splats.forEach(async singleSplat => {        
-        singleSplat.Render(true);       
-    })
-    splat.updateRenderingOfSplats();  
-});
-
-// :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-//                                         show none
-// :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-document.getElementById('show-none').addEventListener('click', async function() {
-    document.getElementById('side-menu').style.left = '-300px'; // Menü schließen
-
-    splat.splats.forEach(async singleSplat => {        
-        singleSplat.Render(false);               
-    })
-    splat.updateRenderingOfSplats();      
-});
 // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //                                      invert selection
 // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -118,10 +95,10 @@ document.getElementById('invert-seclection').addEventListener('click', async fun
 
     let tmpList = []    
     splat.splats.forEach(async singleSplat => {        
-        if(singleSplat.Selection[0] === 1) {            
-            singleSplat.Select(false);
+        if(singleSplat.Selected === 1) {            
+            singleSplat.Selected = 0;
         } else {            
-            singleSplat.Select(true);
+            singleSplat.Selected = 1;
             tmpList.push(singleSplat);
         }        
     })
@@ -132,16 +109,40 @@ document.getElementById('invert-seclection').addEventListener('click', async fun
 });
 
 // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+//                                         show all
+// :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+document.getElementById('show-all').addEventListener('click', async function() {
+    document.getElementById('side-menu').style.left = '-300px'; // Menü schließen
+
+    splat.splats.forEach(async singleSplat => {        
+        singleSplat.Rendered = 1;       
+    })
+    splat.updateRenderingOfSplats();      
+});
+
+// :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+//                                         show none
+// :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+document.getElementById('show-none').addEventListener('click', async function() {
+    document.getElementById('side-menu').style.left = '-300px'; // Menü schließen
+
+    splat.splats.forEach(async singleSplat => {        
+        singleSplat.Rendered = 0;               
+    })
+    splat.updateRenderingOfSplats();      
+});
+
+// :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //                                    render selected splats
 // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 document.getElementById('render-selected-splats').addEventListener('click', function() {    
     document.getElementById('side-menu').style.left = '-300px'; // Menü schließen
 
     splat.splats.forEach(async singleSplat => {        
-        singleSplat.Render(false);               
+        singleSplat.Rendered = 0;               
     })
     currentlySelectedSplats.forEach(singleSplat => {
-        singleSplat.Render(true);               
+        singleSplat.Rendered = 1;               
     })
     splat.updateRenderingOfSplats();   
 });
@@ -153,10 +154,10 @@ document.getElementById('render-unselected-splats').addEventListener('click', as
     document.getElementById('side-menu').style.left = '-300px'; // Menü schließen
 
     splat.splats.forEach(async singleSplat => {        
-        singleSplat.Render(true);               
+        singleSplat.Rendered = 1;               
     })
     currentlySelectedSplats.forEach(singleSplat => {
-        singleSplat.Render(false);               
+        singleSplat.Rendered = 0;               
     })
     splat.updateRenderingOfSplats();     
 });
@@ -200,6 +201,7 @@ document.getElementById('start-show-splats').addEventListener('click', function(
         currentlySelectedSplats.push(splat.splats[i]);                      
     }
     splat.updateRenderingOfSplats();
+    console.log(splat._data.selection)
 });
 
 
@@ -216,7 +218,7 @@ document.getElementById('select-splats').addEventListener('click', function() {
 
     if (selectedSplat !== null){            
         selectedSplat.forEach(singleSplat => {
-            singleSplat.Select(true)
+            singleSplat.Selected = 1
             currentlySelectedSplats.push(singleSplat);
         });        
         splat.updateRenderingOfSplats();      
@@ -251,7 +253,7 @@ function handleMouseDown(event) {
                 
         if (selectedSplat !== null){            
             selectedSplat.forEach(singleSplat => {
-                singleSplat.Select(true)      
+                singleSplat.Selected = 1;
                 currentlySelectedSplats.push(singleSplat);          
             });        
             splat.updateRenderingOfSplats();      
@@ -269,7 +271,7 @@ document.getElementById("show-splats-camera-frustum").addEventListener("click", 
     if (selectedSplat !== null){ 
         console.log("found: " + selectedSplat.length)           
         selectedSplat.forEach(singleSplat => {
-            singleSplat.Select(true)  
+            singleSplat.Selected = 1
             currentlySelectedSplats.push(singleSplat);              
         });        
         splat.updateRenderingOfSplats();      
@@ -283,17 +285,17 @@ document.getElementById("show-splats-camera-frustum").addEventListener("click", 
         clearSelection();
 
         splat.splats.forEach(async singleSplat => {        
-            singleSplat.Select(false);       
+            singleSplat.Selected = 0;
         })
         splat.updateRenderingOfSplats();  
     }, 5500); 
 
     setTimeout(function() {
         splat.splats.forEach(async singleSplat => {        
-            singleSplat.Render(false);               
+            singleSplat.Rendered = 0;
         })
         currentlySelectedSplats.forEach(singleSplat => {
-            singleSplat.Render(true);               
+            singleSplat.Rendered = 1;
         })
         splat.updateRenderingOfSplats(); 
     }, 5000);     
@@ -303,11 +305,11 @@ document.getElementById("select-splats-camera-frustum").addEventListener("click"
     clearSelection();
     document.getElementById('side-menu').style.left = '-300px'; // Menü schließen
 
-    var selectedSplat = raycaster.testCameraViewFrustum(camera);
+    var selectedSplat = raycaster.testCameraViewFrustum(camera, true, 5);
     if (selectedSplat !== null){ 
         console.log("found: " + selectedSplat.length)           
         selectedSplat.forEach(singleSplat => {
-            singleSplat.Select(true)  
+            singleSplat.Selected = 1;
             currentlySelectedSplats.push(singleSplat);              
         });        
         splat.updateRenderingOfSplats();      
@@ -329,10 +331,12 @@ document.getElementById("select-splats-cube").addEventListener("click", function
     const y2 = parseFloat(document.getElementById('vecY_lc').value);
     const z2 = parseFloat(document.getElementById('vecZ_lc').value);
 
+    let color = new Float32Array([1.0, 1.0, 0.0, 0.6]);
+
     let upperLeftCorner = new Float32Array([x1, y1, z1]);
     let bottomRightCorner = new Float32Array([x2, y2, z2]);
 
-    var renderProgram = new SPLAT.CubeVisualisationProgram(renderer, [], upperLeftCorner, bottomRightCorner);
+    var renderProgram = new SPLAT.CubeVisualisationProgram(renderer, [], [upperLeftCorner, bottomRightCorner], color);
     renderPrograms.push(renderProgram);
     renderer.addProgram(renderProgram);
 
@@ -340,7 +344,7 @@ document.getElementById("select-splats-cube").addEventListener("click", function
     if (selectedSplat !== null){ 
         console.log("found: " + selectedSplat.length)           
         selectedSplat.forEach(singleSplat => {
-            singleSplat.Select(true)  
+            singleSplat.Selected = 1;
             currentlySelectedSplats.push(singleSplat);              
         });        
         splat.updateRenderingOfSplats();      
@@ -355,9 +359,17 @@ document.getElementById("set-transparency").addEventListener("click", function()
 
     console.log(splat.splats[0].Color)
     splat.splats.forEach(async singleSplat => {                
-        let color = new SPLAT.Vector4(singleSplat.Color[0], singleSplat.Color[1], singleSplat.Color[2], 5);
-        singleSplat.ChangeColor(color);      
+        let color = new Uint8Array([singleSplat.Color[0], singleSplat.Color[1], singleSplat.Color[2], 5]);
+        singleSplat.Color = color;      
     })
+    splat.updateRenderingOfSplats();  
+})
+
+document.getElementById("Reset-transparency").addEventListener("click", function() {
+    
+    splat.splats.forEach(async singleSplat => {                        
+        singleSplat.ResetColor();  
+    })    
     splat.updateRenderingOfSplats();  
 })
 
@@ -374,7 +386,7 @@ function updateSelectedSplats() {
 
 async function clearSelection() {
     currentlySelectedSplats.forEach(singleSplat => {
-        singleSplat.Select(false)               
+        singleSplat.Select = 0             
     })
     splat.updateRenderingOfSplats();  
 

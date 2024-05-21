@@ -27,6 +27,7 @@ class Splat extends Object3D {
 
     recalculateBounds: () => void;
     createSplatsData: () => void;
+    applySelection: () => void;
 
     constructor(splat: SplatData | undefined = undefined) {
         super();
@@ -54,7 +55,7 @@ class Splat extends Object3D {
                     let scale: Float32Array = new Float32Array(splat.scales.buffer, 3 * i * Constants.BYTE_OFFSET_FLOAT, 3);
                     let color: Uint8Array = new Uint8Array(splat.colors.buffer, 1 * i * Constants.BYTE_OFFSET_INT, 4);
                     
-                    let singleSplat = new SingleSplat(position, rotation, scale, color);
+                    let singleSplat = new SingleSplat(position, rotation, scale, color, i, this._data);
                     this._splats.push(singleSplat)
                 }
             }
@@ -91,6 +92,13 @@ class Splat extends Object3D {
             });
             this.scale = new Vector3(1, 1, 1);
         };
+        
+        this.applySelection = () => {
+            this.selectedChanged = true;
+            this.dispatchEvent(this._changeEvent);
+            
+            this.data.changed = true;
+        }
         
         this.createSplatsData();
 
@@ -158,22 +166,14 @@ class Splat extends Object3D {
         }
     }
     
-    selectSplat(index: number, value: boolean) {
-        this._splats[index].Select(value);
-        this.selectedChanged = value;
+    selectSplat(index: number, value: number) {
+        this._splats[index].Selected = value;
+        
+        this.selectedChanged = true;
         this.dispatchEvent(this._changeEvent);
     }
     
-    renderSplat(index: number, value: boolean)
-    {
-        if (value && this._splats[index].Rendered[0] === 0) {
-            this._numberOfRenderedSplats += 1;
-        } else if (!value && this._splats[index].Rendered[0] === 1) {
-            this._numberOfRenderedSplats -= 1;
-        }
-        
-        this._splats[index].Render(value);
-    }
+    
     
     updateRenderingOfSplats() {
         this.dispatchEvent(this._renderedSplatsChanged);
@@ -247,7 +247,7 @@ class Splat extends Object3D {
         );
 
         for(let i = 0; i < this._numberOfSplats; i++) {
-            if(this._splats[i].Rendered[0] === 1){
+            if(this._splats[i].Rendered === 1){
                 let position: Float32Array = new Float32Array(positions, 3 * i * Constants.BYTE_OFFSET_FLOAT, 3);
                 let rotation: Float32Array = new Float32Array(rotations, 4 * i * Constants.BYTE_OFFSET_FLOAT, 4);
                 let scale: Float32Array = new Float32Array(scales, 3 * i * Constants.BYTE_OFFSET_FLOAT, 3);
@@ -266,7 +266,7 @@ class Splat extends Object3D {
         let tempPositions: number[] = [];
 
         this._splats.forEach((singleSplat) => {
-            if (singleSplat.Rendered[0] === 1) {
+            if (singleSplat.Rendered === 1) {
                 tempPositions.push(...singleSplat.Position);
             }
         });
@@ -281,7 +281,7 @@ class Splat extends Object3D {
         let tempScales: number[] = [];
 
         this._splats.forEach((singleSplat) => {
-            if (singleSplat.Rendered[0] === 1) {
+            if (singleSplat.Rendered === 1) {
                 tempScales.push(...singleSplat.Scale);
             }
         });
@@ -294,7 +294,7 @@ class Splat extends Object3D {
         let tempRotations: number[] = [];
 
         this._splats.forEach((singleSplat) => {
-            if (singleSplat.Rendered[0] === 1) {
+            if (singleSplat.Rendered === 1) {
                 tempRotations.push(...singleSplat.Rotation);
             }
         });
@@ -307,7 +307,7 @@ class Splat extends Object3D {
         let tempColors: number[] = [];
 
         this._splats.forEach((singleSplat) => {
-            if (singleSplat.Rendered[0] === 1) {
+            if (singleSplat.Rendered === 1) {
                 tempColors.push(...singleSplat.Color);
             }
         });
@@ -315,17 +315,18 @@ class Splat extends Object3D {
         return new Uint8Array(tempColors);
     }
 
-    get Selections(): Float32Array {
-        let tempSelections: number[] = [];
+    get Selections(): Uint8Array {
+        const tempSelections: number[] = [];
 
         this._splats.forEach((singleSplat) => {
-            if (singleSplat.Rendered[0] === 1) {
-                tempSelections.push(...singleSplat.Selection);
+            if (singleSplat.Rendered === 1) {
+                tempSelections.push(singleSplat.Selected);
             }
         });
 
-        return new Float32Array(tempSelections);
+        return new Uint8Array(tempSelections);
     }
+
 
 }
 

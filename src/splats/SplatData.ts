@@ -14,6 +14,7 @@ class SplatData {
     private _scales: Float32Array;
     private _colors: Uint8Array;
     private _selection: Uint8Array;
+    private _rendered: Uint8Array;
 
     private removeItemsFromArray: (arr: Float32Array | Uint8Array, start: number, count: number) => Float32Array | Uint8Array;
     removeVertex:(index: number) => void;
@@ -33,6 +34,7 @@ class SplatData {
         rotations: Float32Array | null = null,
         scales: Float32Array | null = null,
         colors: Uint8Array | null = null,
+        rendered: Uint8Array | null = null
     ) {
         this._vertexCount = vertexCount;
         this._positions = positions || new Float32Array(0);
@@ -40,6 +42,7 @@ class SplatData {
         this._scales = scales || new Float32Array(0);
         this._colors = colors || new Uint8Array(0);
         this._selection = new Uint8Array(this.vertexCount);
+        this._rendered = rendered || new Uint8Array(this._vertexCount).fill(1);
 
         this.removeVertex = (index: number) => {
             if(index < 0 || index >= this._vertexCount) {
@@ -190,6 +193,10 @@ class SplatData {
 
     get selection() {
         return this._selection;
+    }
+
+    get rendered() {
+        return this._rendered;
     }
 }
 
