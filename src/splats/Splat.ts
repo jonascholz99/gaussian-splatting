@@ -262,49 +262,57 @@ class Splat extends Object3D {
     };
 
     get Positions(): Float32Array {
-        return this._data.positions;
-        // let tempPositions: number[] = [];
-        //
-        // this._splats.forEach((singleSplat) => {
-        //     if (singleSplat.Rendered[0] === 1) {
-        //         tempPositions.push(...singleSplat.Position);
-        //     }
-        // });
-        //
-        // return new Float32Array(tempPositions);
+        // return this._data.positions;
+        let tempPositions: number[] = [];
+
+        this._splats.forEach((singleSplat) => {
+            if (singleSplat.Rendered[0] === 1) {
+                tempPositions.push(...singleSplat.Position);
+            }
+        });
+
+        return new Float32Array(tempPositions);
     }
 
 
 
     get Scales(): Float32Array {
-        return this._data.scales;
-        // let return this._data.positions;rn new Float32Array(tempScales);
+        // return this._data.scales;
+        let tempScales: number[] = [];
+
+        this._splats.forEach((singleSplat) => {
+            if (singleSplat.Rendered[0] === 1) {
+                tempScales.push(...singleSplat.Scale);
+            }
+        });
+
+        return new Float32Array(tempScales);
     }
 
     get Rotations(): Float32Array {
-        return this._data.rotations;
-        // let tempRotations: number[] = [];
-        //
-        // this._splats.forEach((singleSplat) => {
-        //     if (singleSplat.Rendered[0] === 1) {
-        //         tempRotations.push(...singleSplat.Rotation);
-        //     }
-        // });
-        //
-        // return new Float32Array(tempRotations);
+        // return this._data.rotations;
+        let tempRotations: number[] = [];
+
+        this._splats.forEach((singleSplat) => {
+            if (singleSplat.Rendered[0] === 1) {
+                tempRotations.push(...singleSplat.Rotation);
+            }
+        });
+
+        return new Float32Array(tempRotations);
     }
 
     get Colors(): Uint8Array {
-        return this._data.colors;
-        // let tempColors: number[] = [];
-        //
-        // this._splats.forEach((singleSplat) => {
-        //     if (singleSplat.Rendered[0] === 1) {
-        //         tempColors.push(...singleSplat.Color);
-        //     }
-        // });
-        //
-        // return new Uint8Array(tempColors);
+        // return this._data.colors;
+        let tempColors: number[] = [];
+
+        this._splats.forEach((singleSplat) => {
+            if (singleSplat.Rendered[0] === 1) {
+                tempColors.push(...singleSplat.Color);
+            }
+        });
+
+        return new Uint8Array(tempColors);
     }
 
     get Selections(): Float32Array {
