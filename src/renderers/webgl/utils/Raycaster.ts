@@ -61,15 +61,22 @@ class Raycaster {
             return singleSplatLookup;
         }
 
-        this.testCameraViewFrustum = (camera: Camera) => {
+        this.testCameraViewFrustum = (camera: Camera, showFrustum: boolean = false, showForSeconds: number = -1) => {
             this.renderer.removeAllPrograms();
             const renderData = this.renderProgram.renderData as RenderData;
-            var camHelper: CameraHelper = new CameraHelper(camera);
-            var corners: Vector3[] = camHelper.calculateFrustum();
-
+            let camHelper: CameraHelper = new CameraHelper(camera);
+            let corners: Vector3[] = camHelper.calculateFrustum();
+            
             singleSplatLookup = [];
             
-            Utils.drawCone(this.renderer,corners)
+            if(showFrustum) {
+                Utils.drawCone(this.renderer,corners)
+                if(showForSeconds > 0) {
+                    setTimeout(function() {
+                        renderer.removeAllPrograms();
+                    }, showForSeconds * 1000);
+                } 
+            }
 
             for (const singleSplat of renderData.singleOffsets.keys()) {
                 if(camHelper.pointInFrustum(singleSplat.bounds.center())) {

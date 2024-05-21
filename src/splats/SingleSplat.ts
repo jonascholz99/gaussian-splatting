@@ -43,19 +43,16 @@ class SingleSplat {
         );
 
         this.recalculateBounds = () => {
-            let minVec = new Vector3(
+            this._bounds.min = new Vector3(
                 this._position[0] - this._scale[0],
                 this._position[1] - this._scale[1],
                 this._position[2] - this._scale[2]
             );
-            let maxVec = new Vector3(
+            this._bounds.max = new Vector3(
                 this._position[0] + this._scale[0],
                 this._position[1] + this._scale[1],
                 this._position[2] + this._scale[2]
             );
-
-            this._bounds.min = minVec;
-            this._bounds.max = maxVec;
         };
 
 
@@ -121,12 +118,7 @@ class SingleSplat {
     }
     
     Select(select: boolean) {
-        if(select)
-        {
-            this._selected[0] = 1;
-        } else {
-            this._selected[0] = 0;
-        }         
+        this._selected[0] = select ? 1 : 0;        
     }
 
     SelectAsync(select: boolean): Promise<void> {
@@ -144,11 +136,7 @@ class SingleSplat {
     }
 
     Render(render: boolean) {
-        if(render) {
-            this._rendered[0] = 1;
-        } else {
-            this._rendered[0] = 0;
-        }
+        this._rendered[0] = render ? 1 : 0;
     }
     
     ChangeColor(colorVector: Vector4 | undefined) {

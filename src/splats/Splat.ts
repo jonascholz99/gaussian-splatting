@@ -260,101 +260,65 @@ class Splat extends Object3D {
         
         this._data.detached = false;
     };
-    
-    get Positions() {
-        let positions = new Float32Array(this._numberOfRenderedSplats * 3);
-        let count = 0;
-        
-        this._splats.forEach((singleSplat, index) => {
-            if(singleSplat.Rendered[0] === 1)
-            {
-                positions.set(singleSplat.Position, index * 3);
-                count++;
+
+    get Positions(): Float32Array {
+        return this._data.positions;
+        // let tempPositions: number[] = [];
+        //
+        // this._splats.forEach((singleSplat) => {
+        //     if (singleSplat.Rendered[0] === 1) {
+        //         tempPositions.push(...singleSplat.Position);
+        //     }
+        // });
+        //
+        // return new Float32Array(tempPositions);
+    }
+
+
+
+    get Scales(): Float32Array {
+        return this._data.scales;
+        // let return this._data.positions;rn new Float32Array(tempScales);
+    }
+
+    get Rotations(): Float32Array {
+        return this._data.rotations;
+        // let tempRotations: number[] = [];
+        //
+        // this._splats.forEach((singleSplat) => {
+        //     if (singleSplat.Rendered[0] === 1) {
+        //         tempRotations.push(...singleSplat.Rotation);
+        //     }
+        // });
+        //
+        // return new Float32Array(tempRotations);
+    }
+
+    get Colors(): Uint8Array {
+        return this._data.colors;
+        // let tempColors: number[] = [];
+        //
+        // this._splats.forEach((singleSplat) => {
+        //     if (singleSplat.Rendered[0] === 1) {
+        //         tempColors.push(...singleSplat.Color);
+        //     }
+        // });
+        //
+        // return new Uint8Array(tempColors);
+    }
+
+    get Selections(): Float32Array {
+        let tempSelections: number[] = [];
+
+        this._splats.forEach((singleSplat) => {
+            if (singleSplat.Rendered[0] === 1) {
+                tempSelections.push(...singleSplat.Selection);
             }
         });
 
-        let finalPosition = new Float32Array(count * 3);
-        finalPosition.set(positions.subarray(0, count * 3));
-        
-        return finalPosition;
+        return new Float32Array(tempSelections);
     }
-    
-    get Scales() {
-        let scales = new Float32Array(this._numberOfRenderedSplats * 3);
-        let count = 0;
 
-        this._splats.forEach((singleSplat, index) => {
-            if(singleSplat.Rendered[0] === 1)
-            {
-                scales.set(singleSplat.Scale, index * 3);
-                count++;
-            }
-        });
-
-        let finalScales = new Float32Array(count * 3);
-        finalScales.set(scales.subarray(0, count * 3));
-        
-        return finalScales;
-    }
-    
-    get Rotations() {
-        let rotations = new Float32Array(this._numberOfRenderedSplats * 4);
-        let count = 0;
-
-        this._splats.forEach((singleSplat, index) => {
-            if(singleSplat.Rendered[0] === 1)
-            {
-                rotations.set(singleSplat.Rotation, index * 4);
-                count++;
-            }
-        });
-
-        let finalRotations = new Float32Array(count * 4);
-        finalRotations.set(rotations.subarray(0, count * 4));
-
-        return finalRotations;
-    }
-    
-    get Colors() {
-        let colors = new Uint8Array(this._numberOfRenderedSplats * 4);
-        let count = 0;
-
-        this._splats.forEach((singleSplat, index) => {
-            if(singleSplat.Rendered[0] === 1) {
-                colors.set(singleSplat.Color, index * 4);
-                count++;
-            }
-        });
-
-        let finalColors = new Float32Array(count * 4);
-        finalColors.set(colors.subarray(0, count * 4));
-
-        return finalColors;
-    }
-    
-    
-    
-    get Selections() {
-        let selections = new Uint8Array(this._numberOfRenderedSplats);
-        let count = 0;
-        
-        let counter = 0;
-        this._splats.forEach((singleSplat, index) => {
-            if(singleSplat.Rendered[0] === 1)
-            {
-                selections.set(singleSplat.Selection, index);
-                if(singleSplat.Selection[0]==1) {
-                    counter++;
-                }   
-                count++;
-            }
-        });
-        
-        let finalSelections = new Float32Array(count);
-        finalSelections.set(selections.subarray(0, count));
-        
-        return finalSelections;
-    }
 }
 
 export { Splat };

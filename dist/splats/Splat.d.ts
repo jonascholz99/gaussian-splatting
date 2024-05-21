@@ -37,7 +37,7 @@ declare class Splat extends Object3D {
     get Positions(): Float32Array;
     get Scales(): Float32Array;
     get Rotations(): Float32Array;
-    get Colors(): Float32Array;
+    get Colors(): Uint8Array;
     get Selections(): Float32Array;
 }
 export { Splat };
