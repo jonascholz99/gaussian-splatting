@@ -1,13 +1,14 @@
 import { Vector3 } from "../math/Vector3";
 import { Quaternion } from "../math/Quaternion";
 import { Matrix3 } from "../math/Matrix3";
+import {PointOctree} from "../Octree/points/PointOctree";
 
 class SplatData {
     static RowLength = 3 * 4 + 3 * 4 + 4 + 4;
 
     public changed = false;
     public detached = false;
-
+    
     private _vertexCount: number;
     private _positions: Float32Array;
     private _rotations: Float32Array;
@@ -27,7 +28,7 @@ class SplatData {
         colors: ArrayBufferLike,
         selection: ArrayBufferLike,
     ) => void;
-
+    
     constructor(
         vertexCount: number = 0,
         positions: Float32Array | null = null,
@@ -43,7 +44,7 @@ class SplatData {
         this._colors = colors || new Uint8Array(0);
         this._selection = new Uint8Array(this.vertexCount);
         this._rendered = rendered || new Uint8Array(this._vertexCount).fill(1);
-
+        
         this.removeVertex = (index: number) => {
             if(index < 0 || index >= this._vertexCount) {
                 throw new Error("Index out od bounds");

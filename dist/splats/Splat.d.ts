@@ -15,9 +15,11 @@ declare class Splat extends Object3D {
     private _bounds;
     private _numberOfSplats;
     private _numberOfRenderedSplats;
+    private _octree;
     recalculateBounds: () => void;
     createSplatsData: () => void;
     applySelection: () => void;
+    createOctree: () => void;
     constructor(splat?: SplatData | undefined);
     saveToFile(name?: string | null, format?: string | null): void;
     get data(): SplatData;

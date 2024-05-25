@@ -126,6 +126,7 @@ const throttledSort = () => {
 
 self.onmessage = (e) => {
     if (e.data.sortData) {
+        console.log(e.data.sortData)
         //Recreating the typed arrays every time, will cause firefox to leak memory
         if (!sortData) {
             sortData = {

@@ -18,14 +18,18 @@ let renderPrograms = [];
 let currentlySelectedSplats = [];
 let raycaster;
 
+
 async function main() 
 {    
     var url = "./zw1027_4.splat";
-    splat = await SPLAT.Loader.LoadAsync(url, scene);
-
+    splat = await SPLAT.Loader.LoadAsync(url, scene);    
  
     splatNumber.innerText = "Max number of splats: " + splat.splatCount;
-  
+      
+    var octreeProgram = new SPLAT.OctreeHelper(renderer, [],  splat._octree, 1);            
+    renderPrograms.push(octreeProgram);
+    renderer.addProgram(octreeProgram);
+
     renderer.addProgram(new SPLAT.AxisProgram(renderer, []));
 
     const handleResize = () => {
@@ -49,6 +53,8 @@ async function main()
 }
 
 main();
+
+
 
 document.getElementById('menu-toggle').addEventListener('click', function() {
     updateSelectedSplats();
@@ -171,20 +177,20 @@ document.getElementById('render-center-splats').addEventListener('click', async 
 
     var leftCorners = []
     var rightCorners = []
+    let centerColor = new Float32Array([1.0, 1.0, 0.0, 0.6]);
     currentlySelectedSplats.forEach(singleSplat => {
         let bounds = singleSplat.bounds;           
-                
-        let centerColor = new Float32Array([1.0, 1.0, 0.0, 0.6]);
+                        
         let centerCorner1 = new Float32Array([bounds.center().x-0.05, bounds.center().y-0.05, bounds.center().z-0.05]);
         let centerCorner2 = new Float32Array([bounds.center().x+0.05, bounds.center().y+0.05, bounds.center().z+0.05]);                
 
         leftCorners.push(centerCorner1);
         rightCorners.push(centerCorner2);
-
-        var centerProgram = new SPLAT.MultibleCubesProgram(renderer, [], leftCorners, rightCorners, centerColor);            
-        renderPrograms.push(centerProgram);
-        renderer.addProgram(centerProgram);
+        
     })    
+    var centerProgram = new SPLAT.MultibleCubesProgram(renderer, [], leftCorners, rightCorners, centerColor);            
+    renderPrograms.push(centerProgram);
+    renderer.addProgram(centerProgram);
 });
 
 
@@ -339,6 +345,47 @@ document.getElementById("select-splats-cube").addEventListener("click", function
     var renderProgram = new SPLAT.CubeVisualisationProgram(renderer, [], [upperLeftCorner, bottomRightCorner], color);
     renderPrograms.push(renderProgram);
     renderer.addProgram(renderProgram);
+
+    let min = new SPLAT.Vector3(x1, y1, z1);
+    let max = new SPLAT.Vector3(x2, y2, z2);
+    let testBox = new SPLAT.Box3(min,max);
+    var result = splat._octree.cull(testBox);
+
+    let numberOfPoints = 0
+    for(let j = 0; j < result.length; j++) {        
+        if(result[j] instanceof SPLAT.PointOctant) {
+            numberOfPoints = splat._octree.countPoints(result[j]);
+            console.log("Points in node " + j + ": " + numberOfPoints);
+        }
+        if(numberOfPoints > 0) {
+            for(let i = 0; i < result[j].data.data.length; i++) {
+                let index = result[j].data.data[i];
+                splat.selectSplat(index,1);        
+            }
+        }                
+    }    
+    splat.updateRenderingOfSplats();    
+    
+    var leftCorners = []
+    var rightCorners = []    
+    let centerColor = new Float32Array([1.0, 0.0, 0.0, 0.1]);
+    for(let i = 0; i < result.length; i++) {        
+        
+        let min = result[i].min;
+        let max = result[i].max;
+                        
+        let centerCorner1 = new Float32Array([min.x, min.y, min.z]);
+        let centerCorner2 = new Float32Array([max.x, max.y, max.z]);                
+
+        leftCorners.push(centerCorner1);
+        rightCorners.push(centerCorner2);
+        
+    }
+    var centerProgram = new SPLAT.MultibleCubesProgram(renderer, [], leftCorners, rightCorners, centerColor);            
+    renderPrograms.push(centerProgram);
+    renderer.addProgram(centerProgram);
+
+    console.log(result[0]);
 
     var selectedSplat = raycaster.testBox(upperLeftCorner, bottomRightCorner);
     if (selectedSplat !== null){ 

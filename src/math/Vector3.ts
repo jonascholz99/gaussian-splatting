@@ -1,14 +1,25 @@
 import { Matrix4 } from "./Matrix4";
 
 class Vector3 {
-    public readonly x: number;
-    public readonly y: number;
-    public readonly z: number;
+    public x: number;
+    public y: number;
+    public z: number;
 
     constructor(x: number = 0, y: number = 0, z: number = 0) {
         this.x = x;
         this.y = y;
         this.z = z;
+    }
+
+    set( x: number, y: number, z: number ) {
+
+        if ( z === undefined ) z = this.z;
+
+        this.x = x;
+        this.y = y;
+        this.z = z;
+
+        return this;
     }
 
     equals(v: Vector3): boolean {
@@ -25,6 +36,14 @@ class Vector3 {
         return true;
     }
 
+    addVectors(a:Vector3, b:Vector3) {
+        this.x = a.x + b.x;
+        this.y = a.y + b.y;
+        this.z = a.z + b.z;
+        
+        return this;
+    }
+    
     add(v: number): Vector3;
     add(v: Vector3): Vector3;
     add(v: number | Vector3): Vector3 {
@@ -35,6 +54,23 @@ class Vector3 {
         }
     }
 
+    addScaledVector( v:Vector3, s: number ) {
+
+        this.x += v.x * s;
+        this.y += v.y * s;
+        this.z += v.z * s;
+
+        return this;
+
+    }
+
+    subVectors(a:Vector3, b:Vector3) {
+        this.x = a.x - b.x;
+        this.y = a.y - b.y;
+        this.z = a.z - b.z;
+
+        return this;
+    }
     subtract(v: number): Vector3;
     subtract(v: Vector3): Vector3;
     subtract(v: number | Vector3): Vector3 {
@@ -43,6 +79,16 @@ class Vector3 {
         } else {
             return new Vector3(this.x - v.x, this.y - v.y, this.z - v.z);
         }
+    }
+
+    sub( v: Vector3 ) {
+
+        this.x -= v.x;
+        this.y -= v.y;
+        this.z -= v.z;
+
+        return this;
+
     }
 
     multiply(v: number): Vector3;
@@ -80,6 +126,15 @@ class Vector3 {
         return new Vector3(x, y, z);
     }
 
+    distanceToSquared( v:Vector3 ) {
+
+        const dx = this.x - v.x, dy = this.y - v.y, dz = this.z - v.z;
+
+        return dx * dx + dy * dy + dz * dz;
+
+    }
+
+    
     dot(v: Vector3): number {
         return this.x * v.x + this.y * v.y + this.z * v.z;
     }
@@ -143,12 +198,38 @@ class Vector3 {
         return new Vector3(this.x / length, this.y / length, this.z / length);
     }
 
+    lengthSq() {
+        return this.x * this.x + this.y * this.y + this.z * this.z;
+    }
+
     flat(): number[] {
         return [this.x, this.y, this.z];
     }
 
     clone(): Vector3 {
         return new Vector3(this.x, this.y, this.z);
+    }
+
+    clamp( min:Vector3, max:Vector3 ) {
+
+        // assumes min < max, componentwise
+
+        this.x = Math.max( min.x, Math.min( max.x, this.x ) );
+        this.y = Math.max( min.y, Math.min( max.y, this.y ) );
+        this.z = Math.max( min.z, Math.min( max.z, this.z ) );
+
+        return this;
+
+    }
+    
+    copy( v: Vector3 ) {
+
+        this.x = v.x;
+        this.y = v.y;
+        this.z = v.z;
+
+        return this;
+
     }
 
     toString(): string {

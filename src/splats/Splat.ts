@@ -8,7 +8,7 @@ import { Box3 } from "../math/Box3";
 import { SingleSplat } from "./SingleSplat"
 
 import { Constants } from "../utils/Constants";
-import {ObjectChangedEvent, RenderedSplatsChangedEvent} from "../events/Events";
+import {PointOctree} from "../Octree/points/PointOctree";
 
 class Splat extends Object3D {
     public selectedChanged: boolean = false;
@@ -25,15 +25,19 @@ class Splat extends Object3D {
     private _numberOfSplats: number;
     private _numberOfRenderedSplats: number;
 
+    private _octree: PointOctree<number> | undefined;
+
     recalculateBounds: () => void;
     createSplatsData: () => void;
     applySelection: () => void;
-
+    createOctree: () => void;
+    
     constructor(splat: SplatData | undefined = undefined) {
         super();
         
         this._splats = new Array<SingleSplat>();
         this._data = splat || new SplatData();
+        
         this._bounds = new Box3(
             new Vector3(Infinity, Infinity, Infinity),
             new Vector3(-Infinity, -Infinity, -Infinity),
@@ -48,25 +52,46 @@ class Splat extends Object3D {
             {
                 this._numberOfSplats = splat.vertexCount;
                 this._numberOfRenderedSplats = splat.vertexCount;
-                
-                for(let i = 0; i < splat.vertexCount; i++) {
-                    // let position: Float32Array = new Float32Array(splat.positions.buffer, 3 * i * Constants.BYTE_OFFSET_FLOAT, 3);
-                    // let rotation: Float32Array = new Float32Array(splat.rotations.buffer, 4 * i * Constants.BYTE_OFFSET_FLOAT, 4);
-                    // let scale: Float32Array = new Float32Array(splat.scales.buffer, 3 * i * Constants.BYTE_OFFSET_FLOAT, 3);
-                    // let color: Uint8Array = new Uint8Array(splat.colors.buffer, 1 * i * Constants.BYTE_OFFSET_INT, 4);
-                    
+
+                console.time("Splats creation");
+                for (let i = 0; i < splat.vertexCount; i++) {
                     let singleSplat = new SingleSplat(i, this._data);
-                    this._splats.push(singleSplat)
+                    this._splats.push(singleSplat);
                 }
+                console.timeEnd("Splats creation");
+
             }
             
         }
-
+        
         this.recalculateBounds = () => {
+            console.time("Bounds calculation");
             for (let i = 0; i < this._numberOfSplats; i++) {
-                this._bounds.expand(this._splats[i].PositionVec3);
+                const pos = this._splats[i].Position;
+                this._bounds.expand(new Vector3(pos[0], pos[1], pos[2]));
             }
+            console.timeEnd("Bounds calculation");
         }
+
+        this.createOctree = () => {
+            this._octree = new PointOctree<number>(this._bounds.min, this._bounds.max, 0.0, 8, 8);
+
+            console.time("Octree creation");
+            const positionVector = new Vector3();
+            for (let i = 0; i < this._numberOfSplats; i++) {
+                const pos = this._splats[i].Position;
+                positionVector.set(pos[0], pos[1], pos[2]);
+                this._octree.set(positionVector, i);
+            }
+            console.timeEnd("Octree creation");
+
+            console.log("Depth: " + this._octree.getDepth());
+
+            let dimension = new Vector3();
+            this._octree.getDimensions(dimension);
+            console.log("Dimension: " + dimension);
+        }
+
 
         this.applyPosition = () => {
             this._splats.forEach((splat, index) => {
@@ -99,9 +124,11 @@ class Splat extends Object3D {
             
             this.data.changed = true;
         }
-        
-        this.createSplatsData();
 
+        this.createSplatsData();
+        this.recalculateBounds();
+        this.createOctree();
+        
         this.data.changed = true;
     }
 
