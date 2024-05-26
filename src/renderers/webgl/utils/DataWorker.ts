@@ -19,6 +19,7 @@ class Splat {
     scales: Float32Array = new Float32Array(0);
     colors: Uint8Array = new Uint8Array(0);
     selection: Uint8Array = new Uint8Array(0);
+    rendered: Uint8Array = new Uint8Array(0);
 }
 
 let allocatedVertexCount: number = 0;
@@ -31,6 +32,7 @@ let rotationsPtr: number;
 let scalesPtr: number;
 let colorsPtr: number;
 let selectionPtr: number;
+let renderedPtr: number;
 let dataPtr: number;
 let worldPositionsPtr: number;
 let worldRotationsPtr: number;
@@ -55,6 +57,7 @@ const pack = async (splat: Splat) => {
             wasmModule._free(scalesPtr);
             wasmModule._free(colorsPtr);
             wasmModule._free(selectionPtr);
+            wasmModule._free(renderedPtr);
             wasmModule._free(dataPtr);
             wasmModule._free(worldPositionsPtr);
             wasmModule._free(worldRotationsPtr);
@@ -68,6 +71,7 @@ const pack = async (splat: Splat) => {
         scalesPtr = wasmModule._malloc(3 * allocatedVertexCount * 4);
         colorsPtr = wasmModule._malloc(4 * allocatedVertexCount);
         selectionPtr = wasmModule._malloc(allocatedVertexCount);
+        renderedPtr = wasmModule._malloc(allocatedVertexCount);
         dataPtr = wasmModule._malloc(8 * allocatedVertexCount * 4);
         worldPositionsPtr = wasmModule._malloc(3 * allocatedVertexCount * 4);
         worldRotationsPtr = wasmModule._malloc(4 * allocatedVertexCount * 4);
@@ -79,6 +83,7 @@ const pack = async (splat: Splat) => {
     wasmModule.HEAPF32.set(splat.scales, scalesPtr / 4);
     wasmModule.HEAPU8.set(splat.colors, colorsPtr);
     wasmModule.HEAPU8.set(splat.selection, selectionPtr);
+    wasmModule.HEAPU8.set(splat.rendered, renderedPtr);
 
     wasmModule._pack(
         splat.selected,
@@ -88,6 +93,7 @@ const pack = async (splat: Splat) => {
         scalesPtr,
         colorsPtr,
         selectionPtr,
+        renderedPtr,
         dataPtr,
         worldPositionsPtr,
         worldRotationsPtr,
@@ -118,6 +124,7 @@ const pack = async (splat: Splat) => {
         scales: splat.scales.buffer,
         colors: splat.colors.buffer,
         selection: splat.selection.buffer,
+        rendered: splat.rendered.buffer,
     };
 
     self.postMessage({ response: response }, [
@@ -130,6 +137,7 @@ const pack = async (splat: Splat) => {
         response.scales,
         response.colors,
         response.selection,
+        response.rendered,
     ]);
 
     running = false;

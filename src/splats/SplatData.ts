@@ -10,6 +10,7 @@ class SplatData {
     public detached = false;
     
     private _vertexCount: number;
+    private _renderedSplats: number;
     private _positions: Float32Array;
     private _rotations: Float32Array;
     private _scales: Float32Array;
@@ -17,6 +18,7 @@ class SplatData {
     private _selection: Uint8Array;
     private _rendered: Uint8Array;
 
+    translate: (translation: Vector3) => void;
     private removeItemsFromArray: (arr: Float32Array | Uint8Array, start: number, count: number) => Float32Array | Uint8Array;
     removeVertex:(index: number) => void;
     removeVertexRange:(index: number, count: number) => void;
@@ -27,7 +29,11 @@ class SplatData {
         scales: ArrayBufferLike,
         colors: ArrayBufferLike,
         selection: ArrayBufferLike,
+        rendered: ArrayBufferLike,
     ) => void;
+    
+    resetRendering: () => void;
+    countRenderedSplats: () => void;
     
     constructor(
         vertexCount: number = 0,
@@ -43,7 +49,24 @@ class SplatData {
         this._scales = scales || new Float32Array(0);
         this._colors = colors || new Uint8Array(0);
         this._selection = new Uint8Array(this.vertexCount);
-        this._rendered = rendered || new Uint8Array(this._vertexCount).fill(1);
+        this._rendered = new Uint8Array(this.vertexCount).fill(1);
+        this._renderedSplats = vertexCount;
+        
+        this.resetRendering = () => {
+            this._rendered = new Uint8Array(this.vertexCount).fill(0);
+            // this.countRenderedSplats();
+            // this.changed = true;
+        }
+
+        this.translate = (translation: Vector3) => {
+            for (let i = 0; i < this.vertexCount; i++) {
+                this.positions[3 * i + 0] += translation.x;
+                this.positions[3 * i + 1] += translation.y;
+                this.positions[3 * i + 2] += translation.z;
+            }
+
+            this.changed = true;
+        };
         
         this.removeVertex = (index: number) => {
             if(index < 0 || index >= this._vertexCount) {
@@ -125,19 +148,75 @@ class SplatData {
             scales: ArrayBufferLike,
             colors: ArrayBufferLike,
             selection: ArrayBufferLike,
+            rendered: ArrayBufferLike,
         ) => {
+            const renderedFrame = new Uint8Array(rendered);
+            let receivedSplats = 0;
+            for (let i = 0; i < renderedFrame.length; i++) {
+                if (renderedFrame[i] !== 0) {
+                    receivedSplats++;
+                }
+            }
+            
             console.assert(
-                positions.byteLength === this.vertexCount * 3 * 4,
-                `Expected ${this.vertexCount * 3 * 4} bytes, got ${positions.byteLength} bytes`,
+                positions.byteLength === receivedSplats * 3 * 4,
+                `Expected ${receivedSplats * 3 * 4} bytes, got ${positions.byteLength} bytes which are ${positions.byteLength / 3 / 4} splats`,
             );
-            this._positions = new Float32Array(positions);
-            this._rotations = new Float32Array(rotations);
-            this._scales = new Float32Array(scales);
-            this._colors = new Uint8Array(colors);
-            this._selection = new Uint8Array(selection);
+            
+            const newPositions = new Float32Array(positions);
+            const newRotations = new Float32Array(rotations);
+            const newScales = new Float32Array(scales);
+            const newColors = new Uint8Array(colors);
+            const newSelection = new Uint8Array(selection);
+
+            let newIndex = 0;
+            for (let i = 0; i < renderedFrame.length; i++) {
+                if (renderedFrame[i] === 1) {
+                    // Calculate the starting index
+                    const posIndex = i * 3;
+                    const rotIndex = i * 4;
+                    const scaleIndex = i * 3;
+                    const colorIndex = i * 4;
+
+                    // Update positions (3 values per position)
+                    this._positions.set(newPositions.subarray(newIndex * 3, newIndex * 3 + 3), posIndex);
+
+                    // Update rotations (4 values per rotation)
+                    this._rotations.set(newRotations.subarray(newIndex * 4, newIndex * 4 + 4), rotIndex);
+
+                    // Update scales (3 values per scale)
+                    this._scales.set(newScales.subarray(newIndex * 3, newIndex * 3 + 3), scaleIndex);
+
+                    // Update colors (4 values per color, assuming RGBA)
+                    this._colors.set(newColors.subarray(newIndex * 4, newIndex * 4 + 4), colorIndex);
+
+                    // Update selection
+                    this._selection[i] = newSelection[newIndex];
+
+                    newIndex++;
+                }
+            }
+
+            // this._rendered = new Uint8Array(rendered);
+            // this._positions = new Float32Array(positions);
+            // this._rotations = new Float32Array(rotations);
+            // this._scales = new Float32Array(scales);
+            // this._colors = new Uint8Array(colors);
+            // this._selection = new Uint8Array(selection);
             this.detached = false;
         };
+
+        this.countRenderedSplats = () => {
+            let count = 0;
+            for (let i = 0; i < this._rendered.length; i++) {
+                if (this._rendered[i] !== 0) {
+                    count++;
+                }
+            }
+            this._renderedSplats = count;
+        };
     }
+    
 
     static Deserialize(data: Uint8Array): SplatData {
         const vertexCount = data.length / SplatData.RowLength;
@@ -168,12 +247,16 @@ class SplatData {
             colors[4 * i + 2] = u_buffer[32 * i + 24 + 2];
             colors[4 * i + 3] = u_buffer[32 * i + 24 + 3];
         }
-
+        
         return new SplatData(vertexCount, positions, rotations, scales, colors);
     }
 
     get vertexCount() {
         return this._vertexCount;
+    }
+    
+    get renderedSplats() {
+        return this._renderedSplats;
     }
 
     get positions() {

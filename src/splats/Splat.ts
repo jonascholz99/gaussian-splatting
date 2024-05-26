@@ -25,11 +25,12 @@ class Splat extends Object3D {
     private _numberOfSplats: number;
     private _numberOfRenderedSplats: number;
 
-    private _octree: PointOctree<number> | undefined;
+    private _octree: PointOctree<SingleSplat> | undefined;
 
     recalculateBounds: () => void;
     createSplatsData: () => void;
     applySelection: () => void;
+    applyRendering: () => void;
     createOctree: () => void;
     
     constructor(splat: SplatData | undefined = undefined) {
@@ -74,14 +75,14 @@ class Splat extends Object3D {
         }
 
         this.createOctree = () => {
-            this._octree = new PointOctree<number>(this._bounds.min, this._bounds.max, 0.0, 8, 8);
+            this._octree = new PointOctree<SingleSplat>(this._bounds.min, this._bounds.max, 0.0, 8, 8);
 
             console.time("Octree creation");
             const positionVector = new Vector3();
             for (let i = 0; i < this._numberOfSplats; i++) {
                 const pos = this._splats[i].Position;
                 positionVector.set(pos[0], pos[1], pos[2]);
-                this._octree.set(positionVector, i);
+                this._octree.set(positionVector, this._splats[i]);
             }
             console.timeEnd("Octree creation");
 
@@ -94,12 +95,8 @@ class Splat extends Object3D {
 
 
         this.applyPosition = () => {
-            this._splats.forEach((splat, index) => {
-                splat.translate(this.position);
-            });
+            this.data.translate(this.position);
             this.position = new Vector3();
-            
-            this.data.changed = true;
         };
 
         this.applyRotation = () => {
@@ -122,6 +119,13 @@ class Splat extends Object3D {
             this.selectedChanged = true;
             this.dispatchEvent(this._changeEvent);
             
+            this.data.changed = true;
+        }
+        
+        this.applyRendering = () => {
+            this.data.countRenderedSplats();
+            
+            this.dispatchEvent(this._changeEvent);
             this.data.changed = true;
         }
 
@@ -200,10 +204,12 @@ class Splat extends Object3D {
         this.dispatchEvent(this._changeEvent);
     }
     
-    
+    renderSplat(index: number, value: number) {
+        this._data.rendered[index] = value;
+    }
     
     updateRenderingOfSplats() {
-        this.dispatchEvent(this._renderedSplatsChanged);
+        this.data.changed = true;
     }
 
     get colorTransforms() {
@@ -354,6 +360,9 @@ class Splat extends Object3D {
         return new Uint8Array(tempSelections);
     }
 
+    get Rendered(): Uint8Array {
+        return this.data.rendered;
+    }
 
 }
 

@@ -457,11 +457,11 @@ class RenderProgram extends ShaderProgram {
                 }
 
                 const detachedPositions = new Float32Array(this.renderData.positions.slice().buffer);
-                console.log(detachedPositions.length)
+                // console.log(detachedPositions.length)
                 const detachedTransforms = new Float32Array(this.renderData.transforms.slice().buffer);
-                console.log(detachedTransforms.length)
+                // console.log(detachedTransforms.length)
                 const detachedTransformIndices = new Uint32Array(this.renderData.transformIndices.slice().buffer);
-                console.log(detachedTransformIndices.length)
+                // console.log(detachedTransformIndices.length)
                 this._worker?.postMessage(
                     {
                         sortData: {

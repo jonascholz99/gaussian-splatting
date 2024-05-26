@@ -9,6 +9,7 @@ interface WasmModule {
         scales: number,
         colors: number,
         selection: number,
+        rendered: number,
         data: number,
         worldPositions: number,
         worldRotations: number,

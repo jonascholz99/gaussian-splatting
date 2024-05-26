@@ -36,4 +36,6 @@ export { MultibleCubesProgram } from "./renderers/webgl/programs/individual/Mult
 export { PointOctree } from "./Octree/points/PointOctree"
 export { PointOctant } from "./Octree/points/PointOctant"
 export { OctreeHelper } from "./Octree/OctreeHelper"
+export { OctreeIterator } from "./Octree/core/OctreeIterator"
 export { Box3 } from "./math/Box3"
+export { Frustum } from "./math/Frustum"

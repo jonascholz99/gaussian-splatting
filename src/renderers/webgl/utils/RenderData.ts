@@ -170,6 +170,7 @@ class RenderData {
                     response.scales,
                     response.colors,
                     response.selection,
+                    response.rendered,
                 );
 
                 this._positions.set(response.worldPositions, response.offset * 3);
@@ -179,6 +180,7 @@ class RenderData {
                 this._updating.delete(splat);
 
                 splat.selectedChanged = false;
+                splat.renderNumberChanged = false;
 
                 this.dataChanged = true;
             }
@@ -215,16 +217,19 @@ class RenderData {
             const scalesPtr = wasmModule._malloc(3 * splat.splatCount * 4);
             const colorsPtr = wasmModule._malloc(4 * splat.splatCount);
             const selectionPtr = wasmModule._malloc(splat.splatCount);
+            const renderedPtr = wasmModule._malloc(splat.splatCount)
             const dataPtr = wasmModule._malloc(8 * splat.splatCount * 4);
             const worldPositionsPtr = wasmModule._malloc(3 * splat.splatCount * 4);
             const worldRotationsPtr = wasmModule._malloc(4 * splat.splatCount * 4);
             const worldScalesPtr = wasmModule._malloc(3 * splat.splatCount * 4);
+            
 
             wasmModule.HEAPF32.set(splat.Positions, positionsPtr / 4);
             wasmModule.HEAPF32.set(splat.Rotations, rotationsPtr / 4);
             wasmModule.HEAPF32.set(splat.Scales, scalesPtr / 4);
             wasmModule.HEAPU8.set(splat.Colors, colorsPtr);
             wasmModule.HEAPU8.set(splat.Selections, selectionPtr);
+            wasmModule.HEAPU8.set(splat.Rendered, renderedPtr);
 
             wasmModule._pack(
                 splat.selected,
@@ -234,6 +239,7 @@ class RenderData {
                 scalesPtr,
                 colorsPtr,
                 selectionPtr,
+                renderedPtr,
                 dataPtr,
                 worldPositionsPtr,
                 worldRotationsPtr,
@@ -268,16 +274,19 @@ class RenderData {
             wasmModule._free(scalesPtr);
             wasmModule._free(colorsPtr);
             wasmModule._free(selectionPtr);
+            wasmModule._free(renderedPtr);
             wasmModule._free(dataPtr);
             wasmModule._free(worldPositionsPtr);
             wasmModule._free(worldRotationsPtr);
             wasmModule._free(worldScalesPtr);
+            
 
             this.dataChanged = true;
             this.colorTransformsChanged = true;
         };
 
         const build = (splat: Splat) => {
+            
             if (splat.positionChanged || splat.rotationChanged || splat.scaleChanged || splat.selectedChanged) {
                 updateTransform(splat);
             }
@@ -286,7 +295,7 @@ class RenderData {
                 updateColorTransforms();
             }
             
-            if (!splat.data.changed || splat.data.detached || !splat.renderNumberChanged) return;
+            if (!splat.data.changed || splat.data.detached || splat.renderNumberChanged) return;
             
             const serializedSplat = {
                 position: new Float32Array(splat.position.flat()),
@@ -299,6 +308,7 @@ class RenderData {
                 scales: splat.Scales,
                 colors: splat.Colors,
                 selection: splat.Selections,
+                rendered: splat.Rendered,
                 offset: this._offsets.get(splat) as number,
             };
 
@@ -315,6 +325,7 @@ class RenderData {
                     serializedSplat.scales.buffer,
                     serializedSplat.colors.buffer,
                     serializedSplat.selection.buffer,
+                    serializedSplat.rendered.buffer,
                 ],
             );
 
