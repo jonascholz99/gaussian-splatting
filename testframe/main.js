@@ -6,6 +6,7 @@ const scene = new SPLAT.Scene();
 const camera = new SPLAT.Camera();
 camera.data.far = 100;
 const controls = new SPLAT.OrbitControls(camera, canvas);
+const cameraFrustum = new SPLAT.Frustum();
 
 const splatNumber = document.getElementById("splatNumber");
 const selectedSplats = document.getElementById("selectedSplats");
@@ -36,9 +37,70 @@ async function main()
         renderer.setSize(canvas.clientWidth, canvas.clientHeight);
     };
 
+    let splatIndices = [];
+    let cameraPosition = camera.position.clone();
+    let cameraRotation = camera.rotation.clone();
+
+    const updateFrustum = () => {
+        // Update frustum only if the camera has moved
+        if (!camera.position.equals(cameraPosition) || !camera.rotation.equals(cameraRotation)) {
+            cameraPosition = camera.position.clone;
+            cameraRotation = camera.rotation.clone;
+            cameraFrustum.setFromProjectionMatrix(camera.data.viewProj);
+
+            const iterator = new SPLAT.OctreeIterator(splat._octree.root, cameraFrustum);
+            splat.data.resetRendering();
+                
+            for (let node of iterator) {        
+                const nodeData = node.data;        
+                if (nodeData && nodeData.data) {
+                    for(let singleSplat of nodeData.data) {                        
+                        singleSplat.Rendered = 1;
+                    }            
+                }
+            }                
+            splat.applyRendering();
+            // splat.position = new SPLAT.Vector3(splat.position.x + 0.1, splat.position.y, splat.position.z);
+            // splat.applyPosition();
+        }
+    };
+
     const frame = () => {
         controls.update();
+        
         renderer.render(scene, camera);
+
+        // Update frustum and extract indices if necessary
+        updateFrustum();
+       
+        // leftCorners = [];
+        // rightCorners = [];
+        // for(let i = 0; i < result.length; i++) {        
+                            
+        //     centerCorner1 = new Float32Array([result[i].min.x, result[i].min.y, result[i].min.z]);
+        //     centerCorner2 = new Float32Array([result[i].max.x, result[i].max.y, result[i].max.z]);                
+
+        //     leftCorners.push(centerCorner1);
+        //     rightCorners.push(centerCorner2);
+            
+        // }
+        // removeAllRenderPrograms();
+        // var centerProgram = new SPLAT.MultibleCubesProgram(renderer, [], leftCorners, rightCorners, centerColor);            
+        // renderPrograms.push(centerProgram);
+        // renderer.addProgram(centerProgram);
+
+        // let points = cameraFrustum.getFrustumPoints();
+        // let corners = []
+        // for(let i = 0; i < points.length; i++) {
+        //     corners.push(new Float32Array([points[i].x, points[i].y, points[i].z]))
+        // }
+        // removeAllRenderPrograms();
+
+        // var renderProgram = new SPLAT.CubeVisualisationProgram(renderer, [], corners);
+        // renderPrograms.push(renderProgram);
+        // renderer.addProgram(renderProgram);
+
+
 
         requestAnimationFrame(frame);
     };
@@ -311,15 +373,44 @@ document.getElementById("select-splats-camera-frustum").addEventListener("click"
     clearSelection();
     document.getElementById('side-menu').style.left = '-300px'; // Menü schließen
 
-    var selectedSplat = raycaster.testCameraViewFrustum(camera, true, 5);
-    if (selectedSplat !== null){ 
-        console.log("found: " + selectedSplat.length)           
-        selectedSplat.forEach(singleSplat => {
-            singleSplat.Selected = 1;
-            currentlySelectedSplats.push(singleSplat);              
-        });        
-        splat.updateRenderingOfSplats();      
-    } 
+    splat.data.resetRendering();
+    const iterator = new SPLAT.OctreeIterator(splat._octree.root, cameraFrustum);
+
+    // let points = cameraFrustum.getFrustumPoints();
+    // let corners = []
+    // for(let i = 0; i < points.length; i++) {
+    //     corners.push(new Float32Array([points[i].x, points[i].y, points[i].z]))
+    // }
+    // removeAllRenderPrograms();
+
+    // var renderProgram = new SPLAT.CubeVisualisationProgram(renderer, [], corners);
+    // renderPrograms.push(renderProgram);
+    // renderer.addProgram(renderProgram);
+
+    let first = true;
+    for (let node of iterator) {        
+        const nodeData = node.data;        
+        if (nodeData && nodeData.data) {
+            for(let singleSplat of nodeData.data) {
+                if(first) {
+                    first = false;
+                    console.log(singleSplat)
+                }
+                singleSplat.Rendered = 1;
+            }            
+        }
+    }    
+    splat.applySelection();
+    
+    // var selectedSplat = raycaster.testCameraViewFrustum(camera, true, 5);
+    // if (selectedSplat !== null){ 
+    //     console.log("found: " + selectedSplat.length)           
+    //     selectedSplat.forEach(singleSplat => {
+    //         singleSplat.Selected = 1;
+    //         currentlySelectedSplats.push(singleSplat);              
+    //     });        
+    //     splat.updateRenderingOfSplats();      
+    // } 
 
 });
 

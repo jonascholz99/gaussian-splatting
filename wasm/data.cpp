@@ -72,7 +72,7 @@ void multiplyMatrix3(float *a, float *b, float *result) {
 
 extern "C" {
 void pack(bool selected, uint32_t vertexCount, float *positions, float *rotations, float *scales, uint8_t *colors,
-          uint8_t *selection, uint32_t *data, float *worldPositions, float *worldRotations, float *worldScales) {
+          uint8_t *selection, uint8_t *rendered, uint32_t *data, float *worldPositions, float *worldRotations, float *worldScales) {
     float rot[4];
     float rotMat[9];
     float scaleMat[9] = {0};

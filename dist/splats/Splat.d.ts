@@ -19,6 +19,7 @@ declare class Splat extends Object3D {
     recalculateBounds: () => void;
     createSplatsData: () => void;
     applySelection: () => void;
+    applyRendering: () => void;
     createOctree: () => void;
     constructor(splat?: SplatData | undefined);
     saveToFile(name?: string | null, format?: string | null): void;
@@ -28,6 +29,7 @@ declare class Splat extends Object3D {
     get selected(): boolean;
     set selected(selected: boolean);
     selectSplat(index: number, value: number): void;
+    renderSplat(index: number, value: number): void;
     updateRenderingOfSplats(): void;
     get colorTransforms(): Matrix4[];
     get colorTransformsMap(): Map<number, number>;
@@ -41,5 +43,6 @@ declare class Splat extends Object3D {
     get Rotations(): Float32Array;
     get Colors(): Uint8Array;
     get Selections(): Uint8Array;
+    get Rendered(): Uint8Array;
 }
 export { Splat };

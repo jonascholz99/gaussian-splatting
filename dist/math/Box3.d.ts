@@ -5,6 +5,7 @@ declare class Box3 {
     constructor(min: Vector3, max: Vector3);
     contains(point: Vector3): boolean;
     intersects(box: Box3): boolean;
+    intersectsBox(box: Box3): boolean;
     intersectsBasedOnCenter(box: Box3): boolean;
     size(): Vector3;
     center(): Vector3;
