@@ -1,6 +1,7 @@
 import { Box3 } from "../../math/Box3";
 import { Vector3 } from "../../math/Vector3";
 import { Node } from "./Node";
+import {Frustum} from "../../math/Frustum";
 
 const b = new Box3(
     new Vector3(Infinity, Infinity, Infinity),
@@ -11,7 +12,7 @@ export class OctreeIterator implements Iterator<Node>, Iterable<Node> {
     
     private root: Node;
     
-    private region: Box3 | null;
+    private region: Box3 | Frustum | null;
     
     private result!: IteratorResult<Node>;
     
@@ -19,7 +20,7 @@ export class OctreeIterator implements Iterator<Node>, Iterable<Node> {
     
     private indices!: number[];
     
-    constructor(root: Node, region: Box3 | null = null) {
+    constructor(root: Node, region: Box3 | Frustum | null = null) {
         this.root = root;
         this.region = region;
         this.reset();
@@ -35,7 +36,7 @@ export class OctreeIterator implements Iterator<Node>, Iterable<Node> {
             b.min = root.min;
             b.max = root.max;
             
-            if(this.region === null || this.region.intersects(b)) {
+            if(this.region === null || this.region.intersectsBox(b)) {
                 this.trace.push(root);
                 this.indices.push(0);
             }
@@ -68,7 +69,7 @@ export class OctreeIterator implements Iterator<Node>, Iterable<Node> {
                         b.min = child.min;
                         b.max = child.max;
                         
-                        if(!region.intersects(b)) {
+                        if(!region.intersectsBox(b)) {
                             continue;
                         }
                     }

@@ -5,6 +5,7 @@ import { Box3 } from "../math/Box3";
 import { OctreeIterator } from "./core/OctreeIterator";
 import {Raycaster} from "../utils/Raycaster";
 import {OctreeRaycaster} from "./core/OctreeRaycaster";
+import {Frustum} from "../math/Frustum";
 
 const b = new Box3(
     new Vector3(Infinity, Infinity, Infinity),
@@ -29,13 +30,13 @@ function getDepth(node: Node): number {
     return result;
 }
 
-function cull(node: Node, region: Box3, result: Node[]): void {
+function cull(node: Node, region: Box3 | Frustum, result: Node[]): void {
     const children = node.children;
     
     b.min = node.min;
     b.max = node.max;
     
-    if(region.intersects(b)) {
+    if(region.intersectsBox(b)) {
         if(children !== undefined && children !== null) {
             for(let i = 0; i < children.length; ++i) {
                 cull(children[i], region, result);
@@ -88,7 +89,7 @@ export class Octree implements Tree, Iterable<Node> {
         return this.root.getDimensions(result);
     }
     
-    cull(region: Box3): Node[] {
+    cull(region: Box3 | Frustum): Node[] {
         const result: Node[] = []
         cull(this.root, region, result);
         return result;
@@ -108,7 +109,7 @@ export class Octree implements Tree, Iterable<Node> {
         return OctreeRaycaster.intersectOctree(this.root, raycaster.ray);
     }
     
-    leaves(region: Box3 | null = null): Iterator<Node> {
+    leaves(region: Box3 | Frustum | null = null): Iterator<Node> {
         return new OctreeIterator(this.root, region);
     }
     
