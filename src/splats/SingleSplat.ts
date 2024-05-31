@@ -229,6 +229,10 @@ class SingleSplat {
         return new Vector3(pos[0], pos[1], pos[2]);
     }
     
+    get index() {
+        return this._index;
+    }
+    
     // get Position() {
     //     return this._position;
     // }

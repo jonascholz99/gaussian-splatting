@@ -31,6 +31,7 @@ declare class RenderData {
     private _updating;
     private _dirty;
     private _worker;
+    private _renderedSplats;
     getSplat: (index: number) => Splat | null;
     getLocalIndex: (splat: Splat, index: number) => number;
     markDirty: (splat: Splat) => void;

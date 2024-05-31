@@ -6,6 +6,8 @@ import {PointOctree} from "../Octree/points/PointOctree";
 class SplatData {
     static RowLength = 3 * 4 + 3 * 4 + 4 + 4;
 
+    private firstTime = true;
+    
     public changed = false;
     public detached = false;
     
@@ -17,6 +19,13 @@ class SplatData {
     private _colors: Uint8Array;
     private _selection: Uint8Array;
     private _rendered: Uint8Array;
+    
+    private _renderedPositions: Float32Array;
+    private _renderedRotations: Float32Array;
+    private _renderedScales: Float32Array;
+    private _renderedColors: Uint8Array;
+    private _renderedSelection: Uint8Array;
+    private _renderedIndices: Uint32Array;
 
     translate: (translation: Vector3) => void;
     private removeItemsFromArray: (arr: Float32Array | Uint8Array, start: number, count: number) => Float32Array | Uint8Array;
@@ -45,12 +54,19 @@ class SplatData {
     ) {
         this._vertexCount = vertexCount;
         this._positions = positions || new Float32Array(0);
+        this._renderedPositions = positions || new Float32Array(0);
         this._rotations = rotations || new Float32Array(0);
+        this._renderedRotations = rotations || new Float32Array(0);
         this._scales = scales || new Float32Array(0);
+        this._renderedScales = scales || new Float32Array(0);
         this._colors = colors || new Uint8Array(0);
+        this._renderedColors = colors || new Uint8Array(0);
         this._selection = new Uint8Array(this.vertexCount);
+        this._renderedSelection = new Uint8Array(this.vertexCount);
         this._rendered = new Uint8Array(this.vertexCount).fill(1);
         this._renderedSplats = vertexCount;
+
+        this._renderedIndices = new Uint32Array(0);
         
         this.resetRendering = () => {
             this._rendered = new Uint8Array(this.vertexCount).fill(0);
@@ -151,18 +167,13 @@ class SplatData {
             rendered: ArrayBufferLike,
         ) => {
             const renderedFrame = new Uint8Array(rendered);
-            let receivedSplats = 0;
-            for (let i = 0; i < renderedFrame.length; i++) {
-                if (renderedFrame[i] !== 0) {
-                    receivedSplats++;
-                }
-            }
-            
+            const receivedSplats = renderedFrame.reduce((count, value) => count + (value !== 0 ? 1 : 0), 0);
+
             console.assert(
                 positions.byteLength === receivedSplats * 3 * 4,
                 `Expected ${receivedSplats * 3 * 4} bytes, got ${positions.byteLength} bytes which are ${positions.byteLength / 3 / 4} splats`,
             );
-            
+
             const newPositions = new Float32Array(positions);
             const newRotations = new Float32Array(rotations);
             const newScales = new Float32Array(scales);
@@ -172,23 +183,27 @@ class SplatData {
             let newIndex = 0;
             for (let i = 0; i < renderedFrame.length; i++) {
                 if (renderedFrame[i] === 1) {
-                    // Calculate the starting index
-                    const posIndex = i * 3;
-                    const rotIndex = i * 4;
-                    const scaleIndex = i * 3;
-                    const colorIndex = i * 4;
-
                     // Update positions (3 values per position)
-                    this._positions.set(newPositions.subarray(newIndex * 3, newIndex * 3 + 3), posIndex);
+                    this._positions[i * 3] = newPositions[newIndex * 3];
+                    this._positions[i * 3 + 1] = newPositions[newIndex * 3 + 1];
+                    this._positions[i * 3 + 2] = newPositions[newIndex * 3 + 2];
 
                     // Update rotations (4 values per rotation)
-                    this._rotations.set(newRotations.subarray(newIndex * 4, newIndex * 4 + 4), rotIndex);
+                    this._rotations[i * 4] = newRotations[newIndex * 4];
+                    this._rotations[i * 4 + 1] = newRotations[newIndex * 4 + 1];
+                    this._rotations[i * 4 + 2] = newRotations[newIndex * 4 + 2];
+                    this._rotations[i * 4 + 3] = newRotations[newIndex * 4 + 3];
 
                     // Update scales (3 values per scale)
-                    this._scales.set(newScales.subarray(newIndex * 3, newIndex * 3 + 3), scaleIndex);
+                    this._scales[i * 3] = newScales[newIndex * 3];
+                    this._scales[i * 3 + 1] = newScales[newIndex * 3 + 1];
+                    this._scales[i * 3 + 2] = newScales[newIndex * 3 + 2];
 
                     // Update colors (4 values per color, assuming RGBA)
-                    this._colors.set(newColors.subarray(newIndex * 4, newIndex * 4 + 4), colorIndex);
+                    this._colors[i * 4] = newColors[newIndex * 4];
+                    this._colors[i * 4 + 1] = newColors[newIndex * 4 + 1];
+                    this._colors[i * 4 + 2] = newColors[newIndex * 4 + 2];
+                    this._colors[i * 4 + 3] = newColors[newIndex * 4 + 3];
 
                     // Update selection
                     this._selection[i] = newSelection[newIndex];
@@ -197,14 +212,9 @@ class SplatData {
                 }
             }
 
-            // this._rendered = new Uint8Array(rendered);
-            // this._positions = new Float32Array(positions);
-            // this._rotations = new Float32Array(rotations);
-            // this._scales = new Float32Array(scales);
-            // this._colors = new Uint8Array(colors);
-            // this._selection = new Uint8Array(selection);
             this.detached = false;
         };
+
 
         this.countRenderedSplats = () => {
             let count = 0;
@@ -262,25 +272,83 @@ class SplatData {
     get positions() {
         return this._positions;
     }
+    
+    get renderedPositions() {
+        return this._renderedPositions;
+    }
 
     get rotations() {
         return this._rotations;
     }
 
+    get renderedRotations() {
+        return this._renderedRotations;
+    }
     get scales() {
         return this._scales;
+    }
+    
+    get renderedScales() {
+        return this._renderedScales;
     }
 
     get colors() {
         return this._colors;
     }
+    
+    get renderedColors() {
+        return this._renderedColors;
+    }
 
     get selection() {
         return this._selection;
     }
+    
+    get renderedSelection() {
+        return this._renderedSelection;
+    }
 
     get rendered() {
         return this._rendered;
+    }
+    
+    calculateRenderedTransforms() {
+        const renderedCount = this._rendered.reduce((count, value) => count + value, 0);
+        this._renderedPositions = new Float32Array(renderedCount * 3);
+        this._renderedRotations = new Float32Array(renderedCount * 4);
+        this._renderedScales = new Float32Array(renderedCount * 3);
+        this._renderedColors = new Uint8Array(renderedCount * 4);
+        this._renderedSelection = new Uint8Array(renderedCount);
+
+        let tempIndex = 0;
+        this._rendered.forEach((isRendered, i) => {
+            if (isRendered === 1) {
+                const positionScaleIndex = i * 3;
+                const rotationColorIndex = i * 4;
+                
+                this._renderedPositions[tempIndex * 3] = this._positions[positionScaleIndex];
+                this._renderedPositions[tempIndex * 3 + 1] = this._positions[positionScaleIndex + 1];
+                this._renderedPositions[tempIndex * 3 + 2] = this._positions[positionScaleIndex + 2];
+                
+                this._renderedRotations[tempIndex * 4] = this._rotations[rotationColorIndex];
+                this._renderedRotations[tempIndex * 4 + 1] = this._rotations[rotationColorIndex + 1];
+                this._renderedRotations[tempIndex * 4 + 2] = this._rotations[rotationColorIndex + 2];
+                this._renderedRotations[tempIndex * 4 + 3] = this._rotations[rotationColorIndex + 3];
+                
+                this._renderedScales[tempIndex * 3] = this._scales[positionScaleIndex];
+                this._renderedScales[tempIndex * 3 + 1] = this._scales[positionScaleIndex + 1];
+                this._renderedScales[tempIndex * 3 + 2] = this._scales[positionScaleIndex + 2];
+
+                this._renderedColors[tempIndex * 4] = this._colors[rotationColorIndex];
+                this._renderedColors[tempIndex * 4 + 1] = this._colors[rotationColorIndex + 1];
+                this._renderedColors[tempIndex * 4 + 2] = this._colors[rotationColorIndex + 2];
+                this._renderedColors[tempIndex * 4 + 3] = this._colors[rotationColorIndex + 3];
+                
+                this._renderedSelection[tempIndex] = this._selection[i];
+
+                tempIndex++;
+            }
+        });
     }
 }
 

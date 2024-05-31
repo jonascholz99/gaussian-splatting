@@ -25,6 +25,7 @@ declare class SingleSplat {
     ResetColor(): void;
     get bounds(): Box3;
     get PositionVec3(): Vector3;
+    get index(): number;
     get ScaleVec3(): Vector3;
 }
 export { SingleSplat };

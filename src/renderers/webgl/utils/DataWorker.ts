@@ -23,6 +23,7 @@ class Splat {
 }
 
 let allocatedVertexCount: number = 0;
+let allocatedRenderedVertexCount: number = 0;
 const updateQueue = new Array<Splat>();
 let running = false;
 let loading = false;
@@ -49,9 +50,17 @@ const pack = async (splat: Splat) => {
         loading = false;
     }
 
+    let renderedSplats = 0;
+    for (let i = 0; i < splat.rendered.length; i++) {
+        if (splat.rendered[i] !== 0) {
+            renderedSplats++;
+        }
+    }
+    
     const targetAllocatedVertexCount = Math.pow(2, Math.ceil(Math.log2(splat.vertexCount)));
-    if (targetAllocatedVertexCount > allocatedVertexCount) {
-        if (allocatedVertexCount > 0) {
+    const targetAllocatedRenderedVertexCount = Math.pow(2, Math.ceil(Math.log2(renderedSplats)));
+    if (targetAllocatedRenderedVertexCount > allocatedRenderedVertexCount) {
+        if (allocatedRenderedVertexCount > 0) {
             wasmModule._free(positionsPtr);
             wasmModule._free(rotationsPtr);
             wasmModule._free(scalesPtr);
@@ -65,29 +74,53 @@ const pack = async (splat: Splat) => {
         }
 
         allocatedVertexCount = targetAllocatedVertexCount;
+        allocatedRenderedVertexCount = targetAllocatedRenderedVertexCount;
 
-        positionsPtr = wasmModule._malloc(3 * allocatedVertexCount * 4);
-        rotationsPtr = wasmModule._malloc(4 * allocatedVertexCount * 4);
-        scalesPtr = wasmModule._malloc(3 * allocatedVertexCount * 4);
-        colorsPtr = wasmModule._malloc(4 * allocatedVertexCount);
-        selectionPtr = wasmModule._malloc(allocatedVertexCount);
+        console.log("allocatedVertexCount: " + allocatedVertexCount)
+        console.log("allocatedRenderedVertexCount: " + allocatedRenderedVertexCount)
+        
+        positionsPtr = wasmModule._malloc(3 * allocatedRenderedVertexCount * 4);
+        rotationsPtr = wasmModule._malloc(4 * allocatedRenderedVertexCount * 4);
+        scalesPtr = wasmModule._malloc(3 * allocatedRenderedVertexCount * 4);
+        colorsPtr = wasmModule._malloc(4 * allocatedRenderedVertexCount);
+        selectionPtr = wasmModule._malloc(allocatedRenderedVertexCount);
         renderedPtr = wasmModule._malloc(allocatedVertexCount);
-        dataPtr = wasmModule._malloc(8 * allocatedVertexCount * 4);
-        worldPositionsPtr = wasmModule._malloc(3 * allocatedVertexCount * 4);
-        worldRotationsPtr = wasmModule._malloc(4 * allocatedVertexCount * 4);
-        worldScalesPtr = wasmModule._malloc(3 * allocatedVertexCount * 4);
+        dataPtr = wasmModule._malloc(8 * allocatedRenderedVertexCount * 4);
+        worldPositionsPtr = wasmModule._malloc(3 * allocatedRenderedVertexCount * 4);
+        worldRotationsPtr = wasmModule._malloc(4 * allocatedRenderedVertexCount * 4);
+        worldScalesPtr = wasmModule._malloc(3 * allocatedRenderedVertexCount * 4);
     }
 
+    if (splat.positions.length > allocatedRenderedVertexCount * 3) {
+        throw new Error("splat.positions exceeds allocated memory");
+    }
+    if (splat.rotations.length > allocatedRenderedVertexCount * 4) {
+        throw new Error("splat.rotations exceeds allocated memory");
+    }
+    if (splat.scales.length > allocatedRenderedVertexCount * 3) {
+        throw new Error("splat.scales exceeds allocated memory");
+    }
+    if (splat.colors.length > allocatedRenderedVertexCount * 4) {
+        throw new Error("splat.colors exceeds allocated memory");
+    }
+    if (splat.selection.length > allocatedRenderedVertexCount) {
+        throw new Error("splat.selection exceeds allocated memory");
+    }
+    if (splat.rendered.length > allocatedVertexCount) {
+        throw new Error("splat.rendered exceeds allocated memory");
+    }
+
+    
     wasmModule.HEAPF32.set(splat.positions, positionsPtr / 4);
     wasmModule.HEAPF32.set(splat.rotations, rotationsPtr / 4);
     wasmModule.HEAPF32.set(splat.scales, scalesPtr / 4);
     wasmModule.HEAPU8.set(splat.colors, colorsPtr);
     wasmModule.HEAPU8.set(splat.selection, selectionPtr);
     wasmModule.HEAPU8.set(splat.rendered, renderedPtr);
-
+    
     wasmModule._pack(
         splat.selected,
-        splat.vertexCount,
+        renderedSplats,
         positionsPtr,
         rotationsPtr,
         scalesPtr,
@@ -100,16 +133,16 @@ const pack = async (splat: Splat) => {
         worldScalesPtr,
     );
 
-    const outData = new Uint32Array(wasmModule.HEAPU32.buffer, dataPtr, splat.vertexCount * 8);
+    const outData = new Uint32Array(wasmModule.HEAPU32.buffer, dataPtr, renderedSplats * 8);
     const detachedData = new Uint32Array(outData.slice().buffer);
 
-    const worldPositions = new Float32Array(wasmModule.HEAPF32.buffer, worldPositionsPtr, splat.vertexCount * 3);
+    const worldPositions = new Float32Array(wasmModule.HEAPF32.buffer, worldPositionsPtr, renderedSplats * 3);
     const detachedWorldPositions = new Float32Array(worldPositions.slice().buffer);
 
-    const worldRotations = new Float32Array(wasmModule.HEAPF32.buffer, worldRotationsPtr, splat.vertexCount * 4);
+    const worldRotations = new Float32Array(wasmModule.HEAPF32.buffer, worldRotationsPtr, renderedSplats * 4);
     const detachedWorldRotations = new Float32Array(worldRotations.slice().buffer);
 
-    const worldScales = new Float32Array(wasmModule.HEAPF32.buffer, worldScalesPtr, splat.vertexCount * 3);
+    const worldScales = new Float32Array(wasmModule.HEAPF32.buffer, worldScalesPtr, renderedSplats * 3);
     const detachedWorldScales = new Float32Array(worldScales.slice().buffer);
 
     const response = {

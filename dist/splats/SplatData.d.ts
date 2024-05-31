@@ -1,6 +1,7 @@
 import { Vector3 } from "../math/Vector3";
 declare class SplatData {
     static RowLength: number;
+    private firstTime;
     changed: boolean;
     detached: boolean;
     private _vertexCount;
@@ -11,6 +12,12 @@ declare class SplatData {
     private _colors;
     private _selection;
     private _rendered;
+    private _renderedPositions;
+    private _renderedRotations;
+    private _renderedScales;
+    private _renderedColors;
+    private _renderedSelection;
+    private _renderedIndices;
     translate: (translation: Vector3) => void;
     private removeItemsFromArray;
     removeVertex: (index: number) => void;
@@ -24,10 +31,16 @@ declare class SplatData {
     get vertexCount(): number;
     get renderedSplats(): number;
     get positions(): Float32Array;
+    get renderedPositions(): Float32Array;
     get rotations(): Float32Array;
+    get renderedRotations(): Float32Array;
     get scales(): Float32Array;
+    get renderedScales(): Float32Array;
     get colors(): Uint8Array;
+    get renderedColors(): Uint8Array;
     get selection(): Uint8Array;
+    get renderedSelection(): Uint8Array;
     get rendered(): Uint8Array;
+    calculateRenderedTransforms(): void;
 }
 export { SplatData };

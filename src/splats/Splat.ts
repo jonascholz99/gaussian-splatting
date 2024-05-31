@@ -124,6 +124,7 @@ class Splat extends Object3D {
         
         this.applyRendering = () => {
             this.data.countRenderedSplats();
+            this.renderNumberChanged = true;
             
             this.dispatchEvent(this._changeEvent);
             this.data.changed = true;
@@ -235,7 +236,7 @@ class Splat extends Object3D {
     }
     
     get numberOfRenderedSplats() {
-        return this._numberOfRenderedSplats;
+        return this._data.renderedSplats;
     }
 
     serialize = () => {
@@ -295,75 +296,69 @@ class Splat extends Object3D {
     };
 
     get Positions(): Float32Array {
-        // return this._data.positions;
-        let tempPositions: number[] = [];
-
-        this._splats.forEach((singleSplat) => {
-            if (singleSplat.Rendered === 1) {
-                tempPositions.push(...singleSplat.Position);
-            }
-        });
-
-        return new Float32Array(tempPositions);
+        return this._data.renderedPositions;
     }
 
 
 
     get Scales(): Float32Array {
+        return this._data.renderedScales;
         // return this._data.scales;
-        let tempScales: number[] = [];
-
-        this._splats.forEach((singleSplat) => {
-            if (singleSplat.Rendered === 1) {
-                tempScales.push(...singleSplat.Scale);
-            }
-        });
-
-        return new Float32Array(tempScales);
+        // let tempScales: number[] = [];
+        //
+        // this._splats.forEach((singleSplat) => {
+        //     if (singleSplat.Rendered === 1) {
+        //         tempScales.push(...singleSplat.Scale);
+        //     }
+        // });
+        //
+        // return new Float32Array(tempScales);
     }
 
     get Rotations(): Float32Array {
+        return this._data.renderedRotations;
         // return this._data.rotations;
-        let tempRotations: number[] = [];
-
-        this._splats.forEach((singleSplat) => {
-            if (singleSplat.Rendered === 1) {
-                tempRotations.push(...singleSplat.Rotation);
-            }
-        });
-
-        return new Float32Array(tempRotations);
+        // let tempRotations: number[] = [];
+        //
+        // this._splats.forEach((singleSplat) => {
+        //     if (singleSplat.Rendered === 1) {
+        //         tempRotations.push(...singleSplat.Rotation);
+        //     }
+        // });
+        //
+        // return new Float32Array(tempRotations);
     }
 
     get Colors(): Uint8Array {
+        return this._data.renderedColors;
         // return this._data.colors;
-        let tempColors: number[] = [];
-
-        this._splats.forEach((singleSplat) => {
-            if (singleSplat.Rendered === 1) {
-                tempColors.push(...singleSplat.Color);
-            }
-        });
-
-        return new Uint8Array(tempColors);
+        // let tempColors: number[] = [];
+        //
+        // this._splats.forEach((singleSplat) => {
+        //     if (singleSplat.Rendered === 1) {
+        //         tempColors.push(...singleSplat.Color);
+        //     }
+        // });
+        //
+        // return new Uint8Array(tempColors);
     }
 
     get Selections(): Uint8Array {
-        const tempSelections: number[] = [];
-
-        this._splats.forEach((singleSplat) => {
-            if (singleSplat.Rendered === 1) {
-                tempSelections.push(singleSplat.Selected);
-            }
-        });
-
-        return new Uint8Array(tempSelections);
+        return this._data.renderedSelection;
+        // const tempSelections: number[] = [];
+        //
+        // this._splats.forEach((singleSplat) => {
+        //     if (singleSplat.Rendered === 1) {
+        //         tempSelections.push(singleSplat.Selected);
+        //     }
+        // });
+        //
+        // return new Uint8Array(tempSelections);
     }
 
     get Rendered(): Uint8Array {
         return this.data.rendered;
     }
-
 }
 
 export { Splat };

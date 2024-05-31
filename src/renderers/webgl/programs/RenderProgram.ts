@@ -360,6 +360,7 @@ class RenderProgram extends ShaderProgram {
                 this.renderData.transformsChanged ||
                 this.renderData.colorTransformsChanged
             ) {
+                
                 if (this.renderData.dataChanged) {
                     gl.activeTexture(gl.TEXTURE0);
                     gl.bindTexture(gl.TEXTURE_2D, this.splatTexture);
@@ -457,11 +458,8 @@ class RenderProgram extends ShaderProgram {
                 }
 
                 const detachedPositions = new Float32Array(this.renderData.positions.slice().buffer);
-                // console.log(detachedPositions.length)
                 const detachedTransforms = new Float32Array(this.renderData.transforms.slice().buffer);
-                // console.log(detachedTransforms.length)
                 const detachedTransformIndices = new Uint32Array(this.renderData.transformIndices.slice().buffer);
-                // console.log(detachedTransformIndices.length)
                 this._worker?.postMessage(
                     {
                         sortData: {
@@ -477,9 +475,11 @@ class RenderProgram extends ShaderProgram {
                 this.renderData.dataChanged = false;
                 this.renderData.transformsChanged = false;
                 this.renderData.colorTransformsChanged = false;
+                // console.log("Transform Sort");
             }
 
             this._camera.update();
+            // console.log("Camera Sort");
             this._worker?.postMessage({ viewProj: this._camera.data.viewProj.buffer });
 
             gl.viewport(0, 0, canvas.width, canvas.height);

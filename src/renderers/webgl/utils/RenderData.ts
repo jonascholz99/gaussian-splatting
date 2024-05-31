@@ -36,7 +36,9 @@ class RenderData {
     private _updating: Set<Splat> = new Set<Splat>();
     private _dirty: Set<Splat> = new Set<Splat>();
     private _worker: Worker;
-
+    
+    private _renderedSplats: number;
+    
     getSplat: (index: number) => Splat | null;
     getLocalIndex: (splat: Splat, index: number) => number;
     markDirty: (splat: Splat) => void;
@@ -70,6 +72,7 @@ class RenderData {
         }
 
         this._vertexCount = vertexCount;
+        this._renderedSplats = vertexCount;
         this._width = 2048;
         this._height = Math.ceil((2 * this.vertexCount) / this.width);
         this._data = new Uint32Array(this.width * this.height * 4);
@@ -104,6 +107,25 @@ class RenderData {
 
         this._worker = new DataWorker();
 
+        const updateRenderData = () => {
+            this._height = Math.ceil((2 * this._renderedSplats) / this.width);
+            this._data = new Uint32Array(this.width * this.height * 4);
+
+            this._transformIndicesWidth = 1024;
+            this._transformIndicesHeight = Math.ceil(this._renderedSplats / this._transformIndicesWidth);
+            this._transformIndices = new Uint32Array(this._transformIndicesWidth * this._transformIndicesHeight);
+
+            this._colorTransformIndicesWidth = 1024;
+            this._colorTransformIndicesHeight = Math.ceil(this._renderedSplats / this._colorTransformIndicesWidth);
+            this._colorTransformIndices = new Uint32Array(
+                this._colorTransformIndicesWidth * this._colorTransformIndicesHeight,
+            );
+            this.colorTransformIndices.fill(0);
+
+            this._positions = new Float32Array(this._renderedSplats * 3);
+            this._rotations = new Float32Array(this._renderedSplats * 4);
+            this._scales = new Float32Array(this._renderedSplats * 3);
+        }
         const updateTransform = (splat: Splat) => {
             const splatIndex = this._splatIndices.get(splat) as number;
             this._transforms.set(splat.transform.buffer, splatIndex * 20);
@@ -112,7 +134,6 @@ class RenderData {
             splat.rotationChanged = false;
             splat.scaleChanged = false;
             splat.selectedChanged = false;
-            splat.renderNumberChanged = false;
             this.transformsChanged = true;
         };
 
@@ -158,11 +179,20 @@ class RenderData {
                 updateTransform(splat);
                 updateColorTransforms();
 
+                const renderedFrame = new Uint8Array(response.rendered);
+                let renderedCount = 0;
+                for (let i = 0; i < response.vertexCount; i++) {
+                    if (renderedFrame[i] === 1) {
+                        renderedCount++;
+                    }
+                }
+                updateRenderData();
+
                 const splatIndex = this._splatIndices.get(splat) as number;
                 for (let i = 0; i < splat.splatCount; i++) {
                     this._transformIndices[response.offset + i] = splatIndex;
                 }
-
+                
                 this._data.set(response.data, response.offset * 8);
                 splat.data.reattach(
                     response.positions,
@@ -202,7 +232,6 @@ class RenderData {
         }
 
         const buildImmediate = (splat: Splat) => {
-            
             if (!wasmModule) {
                 waitForWasm().then(() => {
                     buildImmediate(splat);
@@ -212,13 +241,13 @@ class RenderData {
 
             updateTransform(splat);
 
-            const positionsPtr = wasmModule._malloc(3 * splat.splatCount * 4);
-            const rotationsPtr = wasmModule._malloc(4 * splat.splatCount * 4);
-            const scalesPtr = wasmModule._malloc(3 * splat.splatCount * 4);
-            const colorsPtr = wasmModule._malloc(4 * splat.splatCount);
-            const selectionPtr = wasmModule._malloc(splat.splatCount);
+            const positionsPtr = wasmModule._malloc(3 * splat.data.renderedSplats * 4);
+            const rotationsPtr = wasmModule._malloc(4 * splat.data.renderedSplats * 4);
+            const scalesPtr = wasmModule._malloc(3 * splat.data.renderedSplats * 4);
+            const colorsPtr = wasmModule._malloc(4 * splat.data.renderedSplats);
+            const selectionPtr = wasmModule._malloc(splat.data.renderedSplats);
             const renderedPtr = wasmModule._malloc(splat.splatCount)
-            const dataPtr = wasmModule._malloc(8 * splat.splatCount * 4);
+            const dataPtr = wasmModule._malloc(8 * splat.data.renderedSplats * 4);
             const worldPositionsPtr = wasmModule._malloc(3 * splat.splatCount * 4);
             const worldRotationsPtr = wasmModule._malloc(4 * splat.splatCount * 4);
             const worldScalesPtr = wasmModule._malloc(3 * splat.splatCount * 4);
@@ -246,7 +275,7 @@ class RenderData {
                 worldScalesPtr,
             );
 
-            const outData = new Uint32Array(wasmModule.HEAPU32.buffer, dataPtr, splat.splatCount * 8);
+            const outData = new Uint32Array(wasmModule.HEAPU32.buffer, dataPtr, splat.data.renderedSplats * 8);
             const worldPositions = new Float32Array(
                 wasmModule.HEAPF32.buffer,
                 worldPositionsPtr,
@@ -290,6 +319,11 @@ class RenderData {
             if (splat.positionChanged || splat.rotationChanged || splat.scaleChanged || splat.selectedChanged) {
                 updateTransform(splat);
             }
+            
+            if(splat.renderNumberChanged) {
+                splat.data.calculateRenderedTransforms();
+                splat.renderNumberChanged = false;
+            }
 
             if (splat.colorTransformChanged) {
                 updateColorTransforms();
@@ -311,7 +345,7 @@ class RenderData {
                 rendered: splat.Rendered,
                 offset: this._offsets.get(splat) as number,
             };
-
+            
             this._worker.postMessage(
                 {
                     splat: serializedSplat,

@@ -20,6 +20,23 @@ let currentlySelectedSplats = [];
 let raycaster;
 
 
+// helper functions
+function isWithinTolerance(value1, value2, tolerance) {
+    return Math.abs(value1 - value2) <= Math.abs(value1 * tolerance);
+}
+
+function positionsAreClose(position1, position2, tolerance) {
+    return isWithinTolerance(position1.x, position2.x, tolerance) &&
+           isWithinTolerance(position1.y, position2.y, tolerance) &&
+           isWithinTolerance(position1.z, position2.z, tolerance);
+}
+
+function rotationsAreClose(rotation1, rotation2, tolerance) {
+    return isWithinTolerance(rotation1.x, rotation2.x, tolerance) &&
+           isWithinTolerance(rotation1.y, rotation2.y, tolerance) &&
+           isWithinTolerance(rotation1.z, rotation2.z, tolerance);
+}
+
 async function main() 
 {    
     var url = "./zw1027_4.splat";
@@ -40,12 +57,13 @@ async function main()
     let splatIndices = [];
     let cameraPosition = camera.position.clone();
     let cameraRotation = camera.rotation.clone();
-
+    
+    const tolerance = 1.1; // 10% Toleranz
     const updateFrustum = () => {
-        // Update frustum only if the camera has moved
-        if (!camera.position.equals(cameraPosition) || !camera.rotation.equals(cameraRotation)) {
-            cameraPosition = camera.position.clone;
-            cameraRotation = camera.rotation.clone;
+        //Update frustum only if the camera has moved
+        if (!positionsAreClose(camera.position, cameraPosition, tolerance) || !rotationsAreClose(camera.rotation, cameraRotation, tolerance)) {            
+            cameraPosition = camera.position.clone();
+            cameraRotation = camera.rotation.clone();
             cameraFrustum.setFromProjectionMatrix(camera.data.viewProj);
 
             const iterator = new SPLAT.OctreeIterator(splat._octree.root, cameraFrustum);
@@ -60,10 +78,14 @@ async function main()
                 }
             }                
             splat.applyRendering();
-            // splat.position = new SPLAT.Vector3(splat.position.x + 0.1, splat.position.y, splat.position.z);
-            // splat.applyPosition();
+            
         }
+        // splat.position = new SPLAT.Vector3(splat.position.x + 1.0, splat.position.y, splat.position.z);
+        //     splat.applyPosition();
     };
+
+    let frameCounter = 1;
+    const updateInterval = 5;
 
     const frame = () => {
         controls.update();
@@ -71,7 +93,9 @@ async function main()
         renderer.render(scene, camera);
 
         // Update frustum and extract indices if necessary
-        updateFrustum();
+        if (frameCounter % updateInterval === 0) {
+            updateFrustum();        
+        }
        
         // leftCorners = [];
         // rightCorners = [];
@@ -101,7 +125,7 @@ async function main()
         // renderer.addProgram(renderProgram);
 
 
-
+        frameCounter++;
         requestAnimationFrame(frame);
     };
 
