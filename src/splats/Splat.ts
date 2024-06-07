@@ -26,12 +26,9 @@ class Splat extends Object3D {
     private _numberOfRenderedSplats: number;
 
     private _octree: PointOctree<SingleSplat> | undefined;
-
-    recalculateBounds: () => void;
-    createSplatsData: () => void;
+    
     applySelection: () => void;
     applyRendering: () => void;
-    createOctree: () => void;
     
     constructor(splat: SplatData | undefined = undefined) {
         super();
@@ -47,52 +44,6 @@ class Splat extends Object3D {
         this._numberOfSplats = 0;
         this._numberOfRenderedSplats = 0
         
-        this.createSplatsData = () => {
-            
-            if(splat != undefined)
-            {
-                this._numberOfSplats = splat.vertexCount;
-                this._numberOfRenderedSplats = splat.vertexCount;
-
-                console.time("Splats creation");
-                for (let i = 0; i < splat.vertexCount; i++) {
-                    let singleSplat = new SingleSplat(i, this._data);
-                    this._splats.push(singleSplat);
-                }
-                console.timeEnd("Splats creation");
-
-            }
-            
-        }
-        
-        this.recalculateBounds = () => {
-            console.time("Bounds calculation");
-            for (let i = 0; i < this._numberOfSplats; i++) {
-                const pos = this._splats[i].Position;
-                this._bounds.expand(new Vector3(pos[0], pos[1], pos[2]));
-            }
-            console.timeEnd("Bounds calculation");
-        }
-
-        this.createOctree = () => {
-            this._octree = new PointOctree<SingleSplat>(this._bounds.min, this._bounds.max, 0.0, 8, 8);
-
-            console.time("Octree creation");
-            const positionVector = new Vector3();
-            for (let i = 0; i < this._numberOfSplats; i++) {
-                const pos = this._splats[i].Position;
-                positionVector.set(pos[0], pos[1], pos[2]);
-                this._octree.set(positionVector, this._splats[i]);
-            }
-            console.timeEnd("Octree creation");
-
-            console.log("Depth: " + this._octree.getDepth());
-
-            let dimension = new Vector3();
-            this._octree.getDimensions(dimension);
-            console.log("Dimension: " + dimension);
-        }
-
 
         this.applyPosition = () => {
             this.data.translate(this.position);
@@ -123,19 +74,70 @@ class Splat extends Object3D {
         }
         
         this.applyRendering = () => {
-            this.data.countRenderedSplats();
             this.renderNumberChanged = true;
             
             this.dispatchEvent(this._changeEvent);
             this.data.changed = true;
         }
 
-        this.createSplatsData();
-        this.recalculateBounds();
-        this.createOctree();
-        
-        this.data.changed = true;
+
+        (async () => {
+            await this.createSplatsData(splat);
+            await this.recalculateBounds();
+            await this.createOctree();
+            this.data.changed = true;
+        })();
     }
+
+    async createSplatsData(splat: SplatData | undefined) {
+        if (splat != undefined) {
+            this._numberOfSplats = splat.vertexCount;
+            this._numberOfRenderedSplats = splat.vertexCount;
+
+            console.time("Splats creation");
+            for (let i = 0; i < splat.vertexCount; i++) {
+                let singleSplat = new SingleSplat(i, this._data);
+                this._splats.push(singleSplat);
+
+                if (i % 1000 === 0) { // Nach jedem 1000. Eintrag den Main-Thread freigeben
+                    await Promise.resolve();
+                }
+            }
+            console.timeEnd("Splats creation");
+        }
+    }
+
+
+    async recalculateBounds() {
+        console.time("Bounds calculation");
+        for (let i = 0; i < this._numberOfSplats; i++) {
+            const pos = this._splats[i].Position;
+            this._bounds.expand(new Vector3(pos[0], pos[1], pos[2]));
+
+            if (i % 1000 === 0) { // Nach jedem 1000. Eintrag den Main-Thread freigeben
+                await Promise.resolve();
+            }
+        }
+        console.timeEnd("Bounds calculation");
+    }
+
+
+    async createOctree() {
+        this._octree = new PointOctree<SingleSplat>(this._bounds.min, this._bounds.max, 0.0, 8, 8);
+        console.time("Octree creation");
+        const positionVector = new Vector3();
+        for (let i = 0; i < this._numberOfSplats; i++) {
+            const pos = this._splats[i].Position;
+            positionVector.set(pos[0], pos[1], pos[2]);
+            this._octree.set(positionVector, this._splats[i]);
+
+            if (i % 1000 === 0) { // Nach jedem 1000. Eintrag den Main-Thread freigeben
+                await Promise.resolve();
+            }
+        }
+        console.timeEnd("Octree creation");
+    }
+
 
     saveToFile(name: string | null = null, format: string | null = null) {
         if (!document) return;
@@ -240,6 +242,7 @@ class Splat extends Object3D {
     }
 
     serialize = () => {
+        console.log("serialize splat")
         const data = new Uint8Array(this._numberOfSplats * SplatData.RowLength);
 
         const f_buffer = new Float32Array(data.buffer);
@@ -299,65 +302,28 @@ class Splat extends Object3D {
         return this._data.renderedPositions;
     }
 
-
-
     get Scales(): Float32Array {
         return this._data.renderedScales;
-        // return this._data.scales;
-        // let tempScales: number[] = [];
-        //
-        // this._splats.forEach((singleSplat) => {
-        //     if (singleSplat.Rendered === 1) {
-        //         tempScales.push(...singleSplat.Scale);
-        //     }
-        // });
-        //
-        // return new Float32Array(tempScales);
     }
 
     get Rotations(): Float32Array {
         return this._data.renderedRotations;
-        // return this._data.rotations;
-        // let tempRotations: number[] = [];
-        //
-        // this._splats.forEach((singleSplat) => {
-        //     if (singleSplat.Rendered === 1) {
-        //         tempRotations.push(...singleSplat.Rotation);
-        //     }
-        // });
-        //
-        // return new Float32Array(tempRotations);
     }
 
     get Colors(): Uint8Array {
         return this._data.renderedColors;
-        // return this._data.colors;
-        // let tempColors: number[] = [];
-        //
-        // this._splats.forEach((singleSplat) => {
-        //     if (singleSplat.Rendered === 1) {
-        //         tempColors.push(...singleSplat.Color);
-        //     }
-        // });
-        //
-        // return new Uint8Array(tempColors);
     }
 
     get Selections(): Uint8Array {
         return this._data.renderedSelection;
-        // const tempSelections: number[] = [];
-        //
-        // this._splats.forEach((singleSplat) => {
-        //     if (singleSplat.Rendered === 1) {
-        //         tempSelections.push(singleSplat.Selected);
-        //     }
-        // });
-        //
-        // return new Uint8Array(tempSelections);
     }
 
     get Rendered(): Uint8Array {
         return this.data.rendered;
+    }
+    
+    get octree() {
+        return this._octree;
     }
 }
 

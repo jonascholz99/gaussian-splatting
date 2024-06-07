@@ -5,7 +5,7 @@ import {Vector3} from "../math/Vector3";
 
 const _matrix:Matrix4 = new Matrix4();
 
-class Raycaster {
+class NewRaycaster {
     public ray: NewRay;
     
     public near: number;
@@ -87,4 +87,4 @@ class Raycaster {
 //     }
 // }
 
-export { Raycaster }
+export { NewRaycaster }

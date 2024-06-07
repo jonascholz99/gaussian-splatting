@@ -11,6 +11,16 @@ class Plane {
         this.constant = constant;
     }
 
+    setFromCoplanarPoints(a: Vector3, b: Vector3, c: Vector3): this {
+        const v1 = new Vector3().subVectors(c, b);
+        const v2 = new Vector3().subVectors(a, b);
+        const normal = new Vector3().crossVectors(v1, v2).normalize();
+        this.normal.set(normal.x, normal.y, normal.z);
+        this.constant = this.normal.dot(b);
+        return this;
+    }
+
+
     setComponents(x: number, y:number, z:number, w:number): this {
         this.normal.set(x, y, z);
         this.constant = w;
@@ -41,7 +51,7 @@ class Plane {
     }
 
     distanceToPoint(point: Vector3): number {
-        return this.normal.dot(point) + this.constant;
+        return this.normal.dot(point) - this.constant;
     }
 }
 

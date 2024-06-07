@@ -3,9 +3,10 @@ import { Node } from "./core/Node";
 import { Vector3 } from "../math/Vector3";
 import { Box3 } from "../math/Box3";
 import { OctreeIterator } from "./core/OctreeIterator";
-import {Raycaster} from "../utils/Raycaster";
+import { NewRaycaster } from "../utils/Raycaster";
 import {OctreeRaycaster} from "./core/OctreeRaycaster";
 import {Frustum} from "../math/Frustum";
+import {WebGLRenderer} from "../renderers/WebGLRenderer";
 
 const b = new Box3(
     new Vector3(Infinity, Infinity, Infinity),
@@ -30,16 +31,18 @@ function getDepth(node: Node): number {
     return result;
 }
 
-function cull(node: Node, region: Box3 | Frustum, result: Node[]): void {
+function cull(node: Node, region: Box3 | Frustum, result: Node[], renderer: WebGLRenderer): void {
     const children = node.children;
     
     b.min = node.min;
     b.max = node.max;
     
-    if(region.intersectsBox(b)) {
+    // b.drawBox(renderer);
+    // setTimeout(() => {b.ereaseBox(renderer);}, 1000);
+    if(region.intersectsBox(b, renderer)) {
         if(children !== undefined && children !== null) {
             for(let i = 0; i < children.length; ++i) {
-                cull(children[i], region, result);
+                cull(children[i], region, result, renderer);
             }
         } else {
             result.push(node);
@@ -89,9 +92,9 @@ export class Octree implements Tree, Iterable<Node> {
         return this.root.getDimensions(result);
     }
     
-    cull(region: Box3 | Frustum): Node[] {
+    cull(region: Box3 | Frustum, renderer: WebGLRenderer): Node[] {
         const result: Node[] = []
-        cull(this.root, region, result);
+        cull(this.root, region, result, renderer);
         return result;
     }
     
@@ -105,7 +108,7 @@ export class Octree implements Tree, Iterable<Node> {
         return result;
     }
     
-    getIntersectingNodes(raycaster: Raycaster): Node[] {
+    getIntersectingNodes(raycaster: NewRaycaster): Node[] {
         return OctreeRaycaster.intersectOctree(this.root, raycaster.ray);
     }
     

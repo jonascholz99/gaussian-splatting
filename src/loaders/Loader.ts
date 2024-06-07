@@ -4,6 +4,7 @@ import { SplatData } from "../splats/SplatData";
 import { initiateFetchRequest, loadRequestDataIntoBuffer } from "../utils/LoaderUtils";
 
 class Loader {
+    
     static async LoadAsync(
         url: string,
         scene: Scene,
@@ -13,6 +14,7 @@ class Loader {
         const res: Response = await initiateFetchRequest(url, useCache);
 
         const buffer = await loadRequestDataIntoBuffer(res, onProgress);
+
         return this.LoadFromArrayBuffer(buffer, scene);
     }
 

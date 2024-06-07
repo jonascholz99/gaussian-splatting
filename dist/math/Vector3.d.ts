@@ -19,8 +19,10 @@ declare class Vector3 {
     multiply(v: Matrix4): Vector3;
     divide(v: number): Vector3;
     divide(v: Vector3): Vector3;
+    crossVectors(a: Vector3, b: Vector3): this;
     cross(v: Vector3): Vector3;
     distanceToSquared(v: Vector3): number;
+    toArray(): number[];
     dot(v: Vector3): number;
     lerp(v: Vector3, t: number): Vector3;
     min(v: Vector3): Vector3;

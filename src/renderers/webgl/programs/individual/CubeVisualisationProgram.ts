@@ -30,8 +30,8 @@ class CubeVisualisationProgram extends ShaderProgram {
 
 
     constructor(renderer: WebGLRenderer, passes: ShaderPass[], points: Float32Array[], color: Float32Array = new Float32Array([1, 0, 0, 0.2])) {
-        if(points.length !== (2 || 8)) {
-            console.log("Please provide 2 oder 8 corners")
+        if (!(points.length == 2 || points.length == 8)) {
+            console.error("Please provide 2 oder 8 corners")
         }
         super(renderer, passes);
 

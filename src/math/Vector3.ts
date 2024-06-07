@@ -118,6 +118,17 @@ class Vector3 {
         }
     }
 
+    crossVectors(a: Vector3, b: Vector3): this {
+        const ax = a.x, ay = a.y, az = a.z;
+        const bx = b.x, by = b.y, bz = b.z;
+
+        this.x = ay * bz - az * by;
+        this.y = az * bx - ax * bz;
+        this.z = ax * by - ay * bx;
+
+        return this;
+    }
+    
     cross(v: Vector3): Vector3 {
         const x = this.y * v.z - this.z * v.y;
         const y = this.z * v.x - this.x * v.z;
@@ -134,6 +145,10 @@ class Vector3 {
 
     }
 
+    toArray(): number[] {
+        return [this.x, this.y, this.z];
+    }
+    
     
     dot(v: Vector3): number {
         return this.x * v.x + this.y * v.y + this.z * v.z;

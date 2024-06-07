@@ -8,6 +8,43 @@
     </head>
 
     <body>
+        <div class="card" id="card">
+            <video class="video" id="video" width="300" height="300" autoplay muted playsinline loop>
+                <source id="videoSource" src="video_keep upright.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <div class="text" id="text">
+                <p>Bitte achte darauf, dein Handy während dem platzieren immer aufrecht zu halten</p>
+            </div>
+            <button class="button" id="nextButton">Ok verstanden!</button>
+        </div>
+
+        <button class="toggle-button" id="toggle-button"><img src="./arrow-down-left.svg"></button>
+        <div class="panel" id="controlPanel">
+            <h2>Bedienpanel</h2>
+            <label>
+                <input type="checkbox" id="checkbox-masking"> Exact Masking
+            </label>
+
+            <label>
+                <input type="checkbox" id="checkbox-origin"> Show Origin
+            </label>
+
+            <label>
+                <input type="checkbox" id="checkbox"> Show Octree Grid
+            </label>
+            <label for="slider">Schieberegler</label>
+            <input type="range" id="slider" min="1" max="8" value="1" step="1">
+        </div>        
+
+        <div id="loader-overlay">
+            <div id="spinner"></div>
+            <div id="loading-text">Loading data and creating splat scene...</div>
+            <ul id="completed-sections"></ul>
+        </div>
+
+        <button class="floating-button" id="floatingButton">Floating Button</button>        
+        
         <button id="menu-toggle" style="position: absolute; top: 10px; left: 10px; z-index: 100;">Menu</button>
         <div id="side-menu" style="position: fixed; left: -300px; top: 0; width: 250px; height: 90%; background: white; z-index: 99; transition: left 0.5s; overflow-y: auto;">
             
@@ -17,6 +54,10 @@
 
             <h2>SPLAT Actions</h2>
             <h4 id="selectedSplats">currently selected: </h4>   
+            <button id="cull-camera-frustum">Cull Camera Frustum</button>
+
+            <hr>
+
             <button id="select-all">Select all</button>  
             <button id="select-none">Select none</button> 
             <button id="invert-seclection">Invert Selection</button>  
@@ -34,6 +75,12 @@
             <hr>
             
             <button id="render-center-splats">Show center of splats</button>    
+
+            <hr>            
+
+            <h2>Diminish</h2>            
+            <button id="start-diminish">Start</button>
+
             <hr>
 
             <h2>Select Splats per index</h2>
@@ -41,7 +88,7 @@
             <input type="number" id="number-splats" value="1">
             
             <button id="start-show-splats">Select</button>
-
+            
             <hr>
 
             <h2>Select Splats per Layer</h2>
@@ -116,6 +163,7 @@
         </div>
 
         <canvas id="canvas"></canvas>
-        <script src="./main.js" type="module"></script>
+        <script src="./main.js" type="module"></script>    
+        <script src="./ExplanationController.js" type="module"></script>         
     </body>
 </html>

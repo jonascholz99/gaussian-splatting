@@ -1,5 +1,6 @@
 import {Vector3} from "./Vector3";
 import {Box3} from "./Box3";
+import {Plane} from "./Plane";
 
 const _vector:Vector3 = new Vector3();
 const _segCenter:Vector3 = new Vector3();
@@ -32,9 +33,50 @@ class NewRay {
         return this;
     }
 
-    at( t: number, target:Vector3 ) {
+    at( t: number, target:Vector3 = new Vector3() ) {
 
         return target.copy( this.origin ).addScaledVector( this.direction, t );
+
+    }
+
+    intersectPlane( plane: Plane, target: Vector3 ) {
+
+        const t = this.distanceToPlane( plane );
+
+        if ( t === null ) {
+
+            return null;
+
+        }
+
+        return this.at( t, target );
+
+    }
+
+    distanceToPlane( plane: Plane ) {
+
+        const denominator = plane.normal.dot( this.direction );
+
+        if ( denominator === 0 ) {
+
+            // line is coplanar, return origin
+            if ( plane.distanceToPoint( this.origin ) === 0 ) {
+
+                return 0;
+
+            }
+
+            // Null is preferable to undefined since undefined means.... it is undefined
+
+            return null;
+
+        }
+
+        const t = - ( this.origin.dot( plane.normal ) + plane.constant ) / denominator;
+
+        // Return if the ray never intersects the plane
+
+        return t >= 0 ? t : null;
 
     }
 

@@ -1,8 +1,11 @@
 import { Vector3 } from "./Vector3";
 import {WebGLRenderer} from "../renderers/WebGLRenderer";
 import {CubeVisualisationProgram} from "../renderers/webgl/programs/individual/CubeVisualisationProgram";
+import {ShaderProgram} from "../renderers/webgl/programs/ShaderProgram";
 
 class Box3 {
+    boxRenderProgram: ShaderProgram | undefined;
+    
     constructor(
         public min: Vector3,
         public max: Vector3,
@@ -82,6 +85,41 @@ class Box3 {
         const height = this.max.y - this.min.y;
         const depth = this.max.z - this.min.z;
         return 2 * ((width * height) + (width * depth) + (height * depth));
+    }
+    
+    public drawBox(renderer: WebGLRenderer) {
+        
+        this.permute();
+        let boxColor = new Float32Array([0.0, 1.0, 0.0, 0.5]);
+        let boxMin = new Float32Array([this.min.x, this.min.y, this.min.z]);
+        let boxMax = new Float32Array([this.max.x, this.max.y, this.max.z]);
+        
+        this.boxRenderProgram = new CubeVisualisationProgram(renderer, [], [boxMin, boxMax], boxColor)
+        renderer.addProgram(this.boxRenderProgram);
+    }
+    
+    public ereaseBox(renderer: WebGLRenderer) {
+        if(this.boxRenderProgram !== undefined) {
+            renderer.removeProgram(this.boxRenderProgram);
+        }
+    }
+
+    expandByPoint(point: Vector3): void {
+        this.min = this.min.min(point);
+        this.max = this.max.max(point);
+    }
+
+    getCorners(): Vector3[] {
+        return [
+            new Vector3(this.min.x, this.min.y, this.min.z), // Near-Bottom-Left
+            new Vector3(this.max.x, this.min.y, this.min.z), // Near-Bottom-Right
+            new Vector3(this.min.x, this.max.y, this.min.z), // Near-Top-Left
+            new Vector3(this.max.x, this.max.y, this.min.z), // Near-Top-Right
+            new Vector3(this.min.x, this.min.y, this.max.z), // Far-Bottom-Left
+            new Vector3(this.max.x, this.min.y, this.max.z), // Far-Bottom-Right
+            new Vector3(this.min.x, this.max.y, this.max.z), // Far-Top-Left
+            new Vector3(this.max.x, this.max.y, this.max.z)  // Far-Top-Right
+        ];
     }
 }
 

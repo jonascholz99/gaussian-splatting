@@ -17,16 +17,11 @@ declare class SplatData {
     private _renderedScales;
     private _renderedColors;
     private _renderedSelection;
-    private _renderedIndices;
     translate: (translation: Vector3) => void;
-    private removeItemsFromArray;
-    removeVertex: (index: number) => void;
-    removeVertexRange: (index: number, count: number) => void;
     serialize: () => Uint8Array;
     reattach: (positions: ArrayBufferLike, rotations: ArrayBufferLike, scales: ArrayBufferLike, colors: ArrayBufferLike, selection: ArrayBufferLike, rendered: ArrayBufferLike) => void;
     resetRendering: () => void;
-    countRenderedSplats: () => void;
-    constructor(vertexCount?: number, positions?: Float32Array | null, rotations?: Float32Array | null, scales?: Float32Array | null, colors?: Uint8Array | null, rendered?: Uint8Array | null);
+    constructor(vertexCount?: number, positions?: Float32Array | null, rotations?: Float32Array | null, scales?: Float32Array | null, colors?: Uint8Array | null);
     static Deserialize(data: Uint8Array): SplatData;
     get vertexCount(): number;
     get renderedSplats(): number;

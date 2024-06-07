@@ -107,7 +107,8 @@ class RenderData {
 
         this._worker = new DataWorker();
 
-        const updateRenderData = () => {
+        const updateRenderData = (splat: Splat) => {
+            this._renderedSplats = splat.data.renderedSplats;
             this._height = Math.ceil((2 * this._renderedSplats) / this.width);
             this._data = new Uint32Array(this.width * this.height * 4);
 
@@ -186,13 +187,15 @@ class RenderData {
                         renderedCount++;
                     }
                 }
-                updateRenderData();
 
                 const splatIndex = this._splatIndices.get(splat) as number;
                 for (let i = 0; i < splat.splatCount; i++) {
                     this._transformIndices[response.offset + i] = splatIndex;
                 }
                 
+                // console.log("this._data: " +this._data.length)
+                // console.log("response.data: " + response.data.length)
+                // console.log("response.offset: " + response.offset)
                 this._data.set(response.data, response.offset * 8);
                 splat.data.reattach(
                     response.positions,
@@ -322,6 +325,7 @@ class RenderData {
             
             if(splat.renderNumberChanged) {
                 splat.data.calculateRenderedTransforms();
+                updateRenderData(splat);
                 splat.renderNumberChanged = false;
             }
 
@@ -489,7 +493,7 @@ class RenderData {
     }
 
     get vertexCount() {
-        return this._vertexCount;
+        return this._renderedSplats;
     }
 
     get needsRebuild() {

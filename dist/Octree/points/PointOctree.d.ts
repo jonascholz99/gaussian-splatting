@@ -3,7 +3,7 @@ import { Vector3 } from "../../math/Vector3";
 import { PointOctant } from "./PointOctant";
 import { PointContainer } from "./PointContainer";
 import { RayPointIntersection } from "./RayPointIntersection";
-import { Raycaster } from "../../utils/Raycaster";
+import { NewRaycaster } from "../../utils/Raycaster";
 export declare class PointOctree<T> extends Octree {
     private bias;
     private maxPoints;
@@ -19,5 +19,5 @@ export declare class PointOctree<T> extends Octree {
     move(point: Vector3, position: Vector3): T | null;
     findNearestPoint(point: Vector3, maxDistance?: number, skipSelf?: boolean): PointContainer<T> | null;
     findPoints(point: Vector3, radius: number, skipSelf?: boolean): PointContainer<T>[];
-    raycast(raycaster: Raycaster): RayPointIntersection<T>[];
+    raycast(raycaster: NewRaycaster): RayPointIntersection<T>[];
 }

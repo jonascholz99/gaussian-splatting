@@ -7,11 +7,14 @@ const camera = new SPLAT.Camera();
 camera.data.far = 100;
 const controls = new SPLAT.OrbitControls(camera, canvas);
 const cameraFrustum = new SPLAT.Frustum();
+const boxFrustum = new SPLAT.Frustum();
 
 const splatNumber = document.getElementById("splatNumber");
 const selectedSplats = document.getElementById("selectedSplats");
 const checkbox_select = document.getElementById("toggle-feature");
 let splat;
+
+let loaderOverlay = document.getElementById('loader-overlay');
 
 let _intersectionTester = new SPLAT.IntersectionTester();
 
@@ -19,6 +22,31 @@ let renderPrograms = [];
 let currentlySelectedSplats = [];
 let raycaster;
 
+let octreeRenderProgram; 
+let originRenderProgram;
+
+let cullByCameraFrustum = false;
+let currentRing1 = null;
+let currentRing2 = null;
+let currentRectangle = null;
+
+let exactMasking = false;
+
+const MouseUsage = {
+    NONE: 'none',
+    SELECT: 'select',
+    DIMINSIH: 'diminish'
+};
+
+let currentMouseUsage = MouseUsage.NONE;
+
+function setMouseUsage(usage) {
+    if (Object.values(MouseUsage).includes(usage)) {
+        currentMouseUsage = usage;
+    } else {
+        throw new Error('Invalid status value');
+    }
+}
 
 // helper functions
 function isWithinTolerance(value1, value2, tolerance) {
@@ -38,17 +66,11 @@ function rotationsAreClose(rotation1, rotation2, tolerance) {
 }
 
 async function main() 
-{    
-    var url = "./zw1027_4.splat";
-    splat = await SPLAT.Loader.LoadAsync(url, scene);    
- 
-    splatNumber.innerText = "Max number of splats: " + splat.splatCount;
-      
-    var octreeProgram = new SPLAT.OctreeHelper(renderer, [],  splat._octree, 1);            
-    renderPrograms.push(octreeProgram);
-    renderer.addProgram(octreeProgram);
+{        
+    var url = "./zw1027_4.splat";    
+    splat = await SPLAT.Loader.LoadAsync(url, scene);            
 
-    renderer.addProgram(new SPLAT.AxisProgram(renderer, []));
+    splatNumber.innerText = "Max number of splats: " + splat.splatCount;                       
 
     const handleResize = () => {
         renderer.setSize(canvas.clientWidth, canvas.clientHeight);
@@ -64,16 +86,18 @@ async function main()
         if (!positionsAreClose(camera.position, cameraPosition, tolerance) || !rotationsAreClose(camera.rotation, cameraRotation, tolerance)) {            
             cameraPosition = camera.position.clone();
             cameraRotation = camera.rotation.clone();
+            cameraFrustum.ereaseFrustum(renderer);
             cameraFrustum.setFromProjectionMatrix(camera.data.viewProj);
+            cameraFrustum.drawFrustum(renderer);
 
             const iterator = new SPLAT.OctreeIterator(splat._octree.root, cameraFrustum);
-            splat.data.resetRendering();
+            splat.data.resetRendering();            
                 
             for (let node of iterator) {        
                 const nodeData = node.data;        
                 if (nodeData && nodeData.data) {
                     for(let singleSplat of nodeData.data) {                        
-                        singleSplat.Rendered = 1;
+                        singleSplat.Rendered = 1;                        
                     }            
                 }
             }                
@@ -84,47 +108,29 @@ async function main()
         //     splat.applyPosition();
     };
 
-    let frameCounter = 1;
-    const updateInterval = 5;
+    let frameCounter = 0;
+    const updateInterval = 15;
+    let firstFrame = true;    
 
     const frame = () => {
+        if(firstFrame) {
+            firstFrame = false;
+            loaderOverlay.style.display = 'none';
+        }
+
         controls.update();
         
         renderer.render(scene, camera);
 
+        
         // Update frustum and extract indices if necessary
-        if (frameCounter % updateInterval === 0) {
+        if (cullByCameraFrustum && frameCounter % updateInterval === 0) {
             updateFrustum();        
+        }       
+
+        if(cullByCube && frameCounter % updateInterval === 0) {
+            updateBoxFrustum();
         }
-       
-        // leftCorners = [];
-        // rightCorners = [];
-        // for(let i = 0; i < result.length; i++) {        
-                            
-        //     centerCorner1 = new Float32Array([result[i].min.x, result[i].min.y, result[i].min.z]);
-        //     centerCorner2 = new Float32Array([result[i].max.x, result[i].max.y, result[i].max.z]);                
-
-        //     leftCorners.push(centerCorner1);
-        //     rightCorners.push(centerCorner2);
-            
-        // }
-        // removeAllRenderPrograms();
-        // var centerProgram = new SPLAT.MultibleCubesProgram(renderer, [], leftCorners, rightCorners, centerColor);            
-        // renderPrograms.push(centerProgram);
-        // renderer.addProgram(centerProgram);
-
-        // let points = cameraFrustum.getFrustumPoints();
-        // let corners = []
-        // for(let i = 0; i < points.length; i++) {
-        //     corners.push(new Float32Array([points[i].x, points[i].y, points[i].z]))
-        // }
-        // removeAllRenderPrograms();
-
-        // var renderProgram = new SPLAT.CubeVisualisationProgram(renderer, [], corners);
-        // renderPrograms.push(renderProgram);
-        // renderer.addProgram(renderProgram);
-
-
         frameCounter++;
         requestAnimationFrame(frame);
     };
@@ -141,6 +147,57 @@ async function main()
 main();
 
 
+document.getElementById('toggle-button').addEventListener('click', function() {
+    const panel = document.getElementById('controlPanel');
+    panel.classList.toggle('open');    
+});
+
+document.getElementById('checkbox').addEventListener('change', function() {
+    const checkbox = document.getElementById('checkbox');    
+    const slider = document.getElementById('slider');
+    
+    const level = parseInt(slider.value, 10);
+
+    if(checkbox.checked) {
+        octreeRenderProgram = new SPLAT.OctreeHelper(renderer, [],  splat.octree, level);          
+        renderer.addProgram(octreeRenderProgram); 
+    } else {
+        renderer.removeProgram(octreeRenderProgram)
+    }
+});
+
+document.getElementById('checkbox-masking').addEventListener('change', function() {
+    const checkbox = document.getElementById('checkbox-masking');    
+    exactMasking = checkbox.checked;
+    console.log(exactMasking)
+});
+
+
+document.getElementById('checkbox-origin').addEventListener('change', function() {
+    const checkbox = document.getElementById('checkbox-origin');    
+    if(checkbox.checked) {
+        originRenderProgram = new SPLAT.AxisProgram(renderer, []);
+        renderer.addProgram(originRenderProgram); 
+    } else {
+        renderer.removeProgram(originRenderProgram)
+    }
+});
+
+document.getElementById('slider').addEventListener('input', function() {
+    const slider = document.getElementById('slider');
+    slider.min = 0;
+    slider.max = splat.octree.getMaxDepth();
+
+    const level = parseInt(slider.value, 10);
+
+    if(octreeRenderProgram !== undefined) {
+        renderer.removeProgram(octreeRenderProgram)
+    }
+    octreeRenderProgram = new SPLAT.OctreeHelper(renderer, [],  splat.octree, level);  
+    renderer.addProgram(octreeRenderProgram); 
+});
+
+
 
 document.getElementById('menu-toggle').addEventListener('click', function() {
     updateSelectedSplats();
@@ -149,6 +206,21 @@ document.getElementById('menu-toggle').addEventListener('click', function() {
         menu.style.left = '-300px';  // Schließen
     } else {
         menu.style.left = '0px';     // Öffnen
+    }
+});
+
+// :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+//                                    Cull Camera Frustum
+// :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+document.getElementById('cull-camera-frustum').addEventListener('click', async function() {
+    document.getElementById('side-menu').style.left = '-300px'; // Menü schließen
+
+    cullByCameraFrustum = !cullByCameraFrustum;
+    if(!cullByCameraFrustum) {
+        splat.splats.forEach(async singleSplat => {        
+            singleSplat.Rendered = 1;       
+        })
+        splat.applyRendering();
     }
 });
 
@@ -163,7 +235,7 @@ document.getElementById('select-all').addEventListener('click', async function()
         singleSplat.Selected = 1;      
         currentlySelectedSplats.push(singleSplat);                       
     })
-    splat.applySelection();      
+    splat.applyRendering();
 });
 
 // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -292,7 +364,7 @@ document.getElementById('start-show-splats').addEventListener('click', function(
         
         currentlySelectedSplats.push(splat.splats[i]);                      
     }
-    splat.updateRenderingOfSplats();
+    splat.applyRendering();
     console.log(splat._data.selection)
 });
 
@@ -318,21 +390,50 @@ document.getElementById('select-splats').addEventListener('click', function() {
 
 });
 
+document.getElementById('start-diminish').addEventListener('click', function() {    
+    document.getElementById('side-menu').style.left = '-300px'; 
+    const floatingButton = document.getElementById('floatingButton');
+    floatingButton.textContent = "Maskieren beginnen";
+    floatingButton.style.bottom = '20px'; // Animate button to fly in
+    setMouseUsage(MouseUsage.DIMINSIH);
+    addMouseListener();
+});
+
+document.getElementById('floatingButton').addEventListener('click', function() {    
+    const floatingButton = document.getElementById('floatingButton');
+    floatingButton.style.bottom = '-100px';
+    if(floatingButton.textContent == "Diminish") {
+        cullByCube = true;
+        boxObject.ereaseBox(renderer);
+    } else {
+        frustumCreationActive = true;
+    }    
+});
+
 
 
 document.getElementById('select-splats-mouse').addEventListener('click', function() {
     clearSelection();
 
     document.getElementById('side-menu').style.left = '-300px'; // Menü schließen
+    setMouseUsage(MouseUsage.SELECT);
     addMouseListener();
 });
 
 function removeMouseListener() {
-    document.removeEventListener('mouseup', handleMouseDown, true);
+    if(currentMouseUsage === MouseUsage.DIMINSIH) {
+        document.removeEventListener('mouseup', handleMouseDown2, true);
+    } else if(currentMouseUsage === MouseUsage.SELECT) {
+        document.removeEventListener('mouseup', handleMouseDown, true);
+    }     
 }
 
 function addMouseListener() {
-    document.addEventListener('mouseup', handleMouseDown, true);
+    if(currentMouseUsage === MouseUsage.DIMINSIH) {
+        document.addEventListener('mouseup', handleMouseDown2, true);
+    } else if(currentMouseUsage === MouseUsage.SELECT) {
+        document.addEventListener('mouseup', handleMouseDown, true);
+    }       
 }
 
 function handleMouseDown(event) {
@@ -348,7 +449,7 @@ function handleMouseDown(event) {
                 singleSplat.Selected = 1;
                 currentlySelectedSplats.push(singleSplat);          
             });        
-            splat.updateRenderingOfSplats();      
+            splat.applyRendering();      
         } 
 
         removeMouseListener();
@@ -479,7 +580,7 @@ document.getElementById("select-splats-cube").addEventListener("click", function
             }
         }                
     }    
-    splat.updateRenderingOfSplats();    
+    splat.applyRendering();    
     
     var leftCorners = []
     var rightCorners = []    
@@ -524,7 +625,7 @@ document.getElementById("set-transparency").addEventListener("click", function()
         let color = new Uint8Array([singleSplat.Color[0], singleSplat.Color[1], singleSplat.Color[2], 5]);
         singleSplat.Color = color;      
     })
-    splat.updateRenderingOfSplats();  
+    splat.applyRendering();  
 })
 
 document.getElementById("Reset-transparency").addEventListener("click", function() {
@@ -532,7 +633,7 @@ document.getElementById("Reset-transparency").addEventListener("click", function
     splat.splats.forEach(async singleSplat => {                        
         singleSplat.ResetColor();  
     })    
-    splat.updateRenderingOfSplats();  
+    splat.applyRendering();  
 })
 
 function removeAllRenderPrograms() {
@@ -553,4 +654,206 @@ async function clearSelection() {
     splat.updateRenderingOfSplats();  
 
     currentlySelectedSplats.splice(0, currentlySelectedSplats.length);
+}
+
+
+function drawRectangle(tx1, ty1, tx2, ty2) {
+    const x1 = ((tx1 + 1) / 2) * canvas.clientWidth;
+    const y1 = ((1 - ty1) / 2) * canvas.clientHeight
+    const x2 = ((tx2 + 1) / 2) * canvas.clientWidth;
+    const y2 = ((1 - ty2) / 2) * canvas.clientHeight
+
+    if (currentRectangle) {
+        currentRectangle.remove();
+    }
+
+    const rect = document.createElement('div');
+    rect.classList.add('rectangle');
+    rect.style.left = `${Math.min(x1, x2)}px`;
+    rect.style.top = `${Math.min(y1, y2)}px`;
+    rect.style.width = `${Math.abs(x2 - x1)}px`;
+    rect.style.height = `${Math.abs(y2 - y1)}px`;
+    document.body.appendChild(rect);
+    
+    currentRectangle = rect;
+}
+
+function drawRing(posX, posY, ringNumber) {
+    const x1 = ((posX + 1) / 2) * canvas.clientWidth;
+    const y1 = ((1 - posY) / 2) * canvas.clientHeight;
+
+    if (ringNumber === 1 && currentRing1) {
+        currentRing1.remove();
+    }
+    if (ringNumber === 2 && currentRing2) {
+        currentRing2.remove();
+    }
+
+    const ring = document.createElement('div');
+    ring.classList.add('ring');
+    ring.style.left = `${x1}px`;
+    ring.style.top = `${y1}px`;
+    document.body.appendChild(ring);
+
+    if (ringNumber === 1) {
+        currentRing1 = ring;
+    } else if (ringNumber === 2) {
+        currentRing2 = ring;
+    }
+}
+
+function hideScreenDrawings() {
+    if (currentRing1) {
+        currentRing1.remove();
+    }
+
+    if (currentRing2) {
+        currentRing2.remove();
+    }
+
+    if (currentRectangle) {
+        currentRectangle.remove();
+    }
+}
+
+let touchPoints1 = [];
+let touchPoints2 = [];
+let frustum1 = null;
+let frustum2 = null;
+let frustumCreationActive = false;
+
+function handleMouseDown2(event) {    
+    if (event.button === 0) {
+        if (frustumCreationActive && touchPoints1.length < 2) {
+            if(touchPoints1.length == 0) {
+                addTouchPoint(touchPoints1, 1, event);
+            } else {
+                addTouchPoint(touchPoints1, 2, event);
+            }
+            
+            if (touchPoints1.length === 2) {
+                frustum1 = createFrustumFromTouchPoints(touchPoints1);
+                console.log("First Frustum Created");
+
+                const floatingButton = document.getElementById('floatingButton');
+                floatingButton.textContent = "Erneut Maskieren";
+                floatingButton.style.bottom = '20px';
+                frustumCreationActive = false;
+
+                setTimeout(function() {
+                    hideScreenDrawings();
+                }, 2000);
+            }
+        } else if (frustumCreationActive && touchPoints2.length < 2) {
+            if(touchPoints2.length == 0) {
+                addTouchPoint(touchPoints2, 1, event);
+            } else {
+                addTouchPoint(touchPoints2, 2, event);
+            }
+                        
+            if (touchPoints2.length === 2) {
+                frustum2 = createFrustumFromTouchPoints(touchPoints2);
+                console.log("Second Frustum Created");
+
+                const floatingButton = document.getElementById('floatingButton');
+                floatingButton.textContent = "Diminish";
+                floatingButton.style.bottom = '20px';
+
+                if (frustum1 && frustum2) {                            
+                    const intersectionPoints = frustum1.intersectFrustum(frustum2);
+                    drawIntersectionVolume(intersectionPoints);                    
+                }
+            }
+        }
+    }
+}
+
+function addTouchPoint(touchPoints, number, event) {
+    let x = (event.clientX / canvas.clientWidth) * 2 - 1;
+    let y = -(event.clientY / canvas.clientHeight) * 2 + 1;
+
+    touchPoints.push({ x, y });
+
+    drawRing(x, y, number);
+}
+
+function createFrustumFromTouchPoints(touchPoints) {
+    let nearTopLeft = camera.screenToWorldPoint(touchPoints[0].x, touchPoints[0].y);
+    let nearBottomRight = camera.screenToWorldPoint(touchPoints[1].x, touchPoints[1].y);
+    let nearTopRight = camera.screenToWorldPoint(touchPoints[1].x, touchPoints[0].y);
+    let nearBottomLeft = camera.screenToWorldPoint(touchPoints[0].x, touchPoints[1].y);
+                                    
+    let farTopLeft = nearTopLeft.add(camera.screenPointToRay(touchPoints[0].x, touchPoints[0].y).multiply(15));                
+    let farTopRight = nearTopRight.add(camera.screenPointToRay(touchPoints[1].x, touchPoints[0].y).multiply(15));
+    let farBottomLeft = nearBottomLeft.add(camera.screenPointToRay(touchPoints[0].x, touchPoints[1].y).multiply(15));
+    let farBottomRight = nearBottomRight.add(camera.screenPointToRay(touchPoints[1].x, touchPoints[1].y).multiply(15));
+
+    let frustum = new SPLAT.Frustum();
+    frustum.setFromPoints(nearTopLeft, nearTopRight, nearBottomLeft, nearBottomRight, farTopLeft, farTopRight,farBottomLeft, farBottomRight);                
+
+    return frustum;
+}
+
+let screenPoints;
+let cullByCube = false;
+let boxObject;
+
+function drawIntersectionVolume(box) {             
+    box.drawBox(renderer);
+           
+    boxObject = box;
+    hideScreenDrawings();
+}
+
+function updateBoxFrustum() {    
+    screenPoints = boxObject.getCorners().map(corner => camera.worldToScreenPoint(corner));
+    // cullByCube = false;     
+
+    // 2. Finde die minimalen und maximalen x- und y-Werte
+    let minX = Infinity, minY = Infinity;
+    let maxX = -Infinity, maxY = -Infinity;
+
+    for (const point of screenPoints) {
+        if (point.x < minX) minX = point.x;
+        if (point.x > maxX) maxX = point.x;
+        if (point.y < minY) minY = point.y;
+        if (point.y > maxY) maxY = point.y;
+    }
+    
+    let nearTopLeft = camera.screenToWorldPoint(minX, maxY);
+    let nearBottomRight = camera.screenToWorldPoint(maxX, minY);
+    let nearTopRight = camera.screenToWorldPoint(maxX, maxY);
+    let nearBottomLeft = camera.screenToWorldPoint(minX, minY);
+                                    
+    let farTopLeft = nearTopLeft.add(camera.screenPointToRay(minX, maxY).multiply(camera.data.far));                
+    let farTopRight = nearTopRight.add(camera.screenPointToRay(maxX, maxY).multiply(camera.data.far));
+    let farBottomLeft = nearBottomLeft.add(camera.screenPointToRay(minX, minY).multiply(camera.data.far));
+    let farBottomRight = nearBottomRight.add(camera.screenPointToRay(maxX, minY).multiply(camera.data.far));    
+    
+    // boxFrustum.ereaseFrustum(renderer);
+    boxFrustum.setFromPoints(nearTopLeft, nearTopRight, nearBottomLeft, nearBottomRight, farTopLeft, farTopRight,farBottomLeft, farBottomRight);  
+    // boxFrustum.drawFrustum(renderer);    
+    
+    const iterator = new SPLAT.OctreeIterator(splat._octree.root, boxFrustum);
+    splat.data.resetRendering();            
+        
+    for (let node of iterator) {        
+        const nodeData = node.data;        
+        if (nodeData && nodeData.data) {
+            for(let singleSplat of nodeData.data) { 
+                if(exactMasking) {
+                    if(boxFrustum.containsBox(singleSplat.bounds)) {                      
+                        singleSplat.Rendered = 1;                            
+                    } 
+                } else {
+                    singleSplat.Rendered = 1;                        
+                }                      
+            }            
+        }
+    }                
+    splat.applyRendering();
+
+    // drawRing(minX, maxY, 1);
+    // drawRing(minX, minY, 2);
+    // drawRectangle(minX, minY, maxX, maxY);    
 }

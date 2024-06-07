@@ -28,5 +28,6 @@ declare class CameraData {
     get projectionMatrix(): Matrix4;
     get viewMatrix(): Matrix4;
     get viewProj(): Matrix4;
+    get direction(): Vector3;
 }
 export { CameraData };

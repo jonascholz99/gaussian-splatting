@@ -122,6 +122,19 @@ class CameraData {
     get viewProj() {
         return this._viewProj;
     }
+    
+    get direction() {
+        const inverseViewMatrix = this._viewMatrix.invert().buffer;
+
+        // Dritte Spalte der inversen View-Matrix extrahieren
+        const direction = new Vector3(
+            inverseViewMatrix[8],
+            inverseViewMatrix[9],
+            inverseViewMatrix[10]
+        );
+
+        return direction.normalize();
+    }
 }
 
 export { CameraData };

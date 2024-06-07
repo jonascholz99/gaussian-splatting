@@ -3,6 +3,7 @@ import { Object3D } from "../core/Object3D";
 import { Matrix4 } from "../math/Matrix4";
 import { Box3 } from "../math/Box3";
 import { SingleSplat } from "./SingleSplat";
+import { PointOctree } from "../Octree/points/PointOctree";
 declare class Splat extends Object3D {
     selectedChanged: boolean;
     renderNumberChanged: boolean;
@@ -16,12 +17,12 @@ declare class Splat extends Object3D {
     private _numberOfSplats;
     private _numberOfRenderedSplats;
     private _octree;
-    recalculateBounds: () => void;
-    createSplatsData: () => void;
     applySelection: () => void;
     applyRendering: () => void;
-    createOctree: () => void;
     constructor(splat?: SplatData | undefined);
+    createSplatsData(splat: SplatData | undefined): Promise<void>;
+    recalculateBounds(): Promise<void>;
+    createOctree(): Promise<void>;
     saveToFile(name?: string | null, format?: string | null): void;
     get data(): SplatData;
     get splats(): SingleSplat[];
@@ -44,5 +45,6 @@ declare class Splat extends Object3D {
     get Colors(): Uint8Array;
     get Selections(): Uint8Array;
     get Rendered(): Uint8Array;
+    get octree(): PointOctree<SingleSplat> | undefined;
 }
 export { Splat };

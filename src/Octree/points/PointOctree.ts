@@ -3,7 +3,7 @@ import {Vector3} from "../../math/Vector3";
 import {PointOctant} from "./PointOctant";
 import {PointContainer} from "./PointContainer";
 import {RayPointIntersection} from "./RayPointIntersection";
-import {Raycaster} from "../../utils/Raycaster";
+import {NewRaycaster} from "../../utils/Raycaster";
 import {PointData} from "./PointData";
 
 function countPoints<T>(octant: PointOctant<T>): number {
@@ -487,7 +487,7 @@ export class PointOctree<T> extends Octree {
         return result;
     }
 
-    raycast(raycaster: Raycaster): RayPointIntersection<T>[] {
+    raycast(raycaster: NewRaycaster): RayPointIntersection<T>[] {
 
         const result: RayPointIntersection<T>[] = [];
         const octants = super.getIntersectingNodes(raycaster) as PointOctant<T>[];
