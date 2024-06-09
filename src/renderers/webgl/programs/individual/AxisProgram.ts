@@ -50,17 +50,33 @@ class AxisProgram extends ShaderProgram {
         const zColor = new Float32Array([0, 0.5, 1, 0.5]);
 
         this._initialize = () => {
-            vertexBuffer = gl.createBuffer() as WebGLBuffer;
+            vertexBuffer = gl.createBuffer() as WebGLBuffer;;
+            if (!vertexBuffer) {
+                console.error("Failed to create the buffer object");
+                return;
+            }
 
             positionAttribute = gl.getAttribLocation(this.program, "position");
+            if (positionAttribute < 0) {
+                console.error("Failed to get the storage location of position");
+                return;
+            }
             gl.enableVertexAttribArray(positionAttribute);
 
             u_projection = gl.getUniformLocation(this.program, "projection") as WebGLUniformLocation;
             u_view = gl.getUniformLocation(this.program, "view") as WebGLUniformLocation;
             u_color = gl.getUniformLocation(this.program, "axisColor") as WebGLUniformLocation;
+
+            if (!u_projection || !u_view || !u_color) {
+                console.error("Failed to get the storage location of uniform variables");
+                return;
+            }
+
+            console.log("Initialized AxisProgram successfully");
         };
 
         const drawAxis = (vertices: Float32Array, color: Float32Array) => {
+            console.log("Drawing axis with vertices:", vertices, "and color:", color);
             gl.uniform4fv(u_color, color);
             gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
             gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
@@ -75,6 +91,8 @@ class AxisProgram extends ShaderProgram {
                 throw new Error("Camera not set");
             }
 
+            console.log("Rendering AxisProgram");
+
             gl.enable(gl.BLEND);
             gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
@@ -86,7 +104,10 @@ class AxisProgram extends ShaderProgram {
             drawAxis(zVertices, zColor);
         };
 
-        this._dispose = () => {};
+        this._dispose = () => {
+            console.log("Disposing AxisProgram resources");
+            gl.deleteBuffer(vertexBuffer);
+        };
     }
 
     protected _getVertexSource() {

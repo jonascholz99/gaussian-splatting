@@ -31,6 +31,9 @@ let currentRing2 = null;
 let currentRectangle = null;
 
 let exactMasking = false;
+let transparency_threshold = 2;
+
+let blend_value = 1;
 
 const MouseUsage = {
     NONE: 'none',
@@ -178,9 +181,19 @@ document.getElementById('checkbox-origin').addEventListener('change', function()
     if(checkbox.checked) {
         originRenderProgram = new SPLAT.AxisProgram(renderer, []);
         renderer.addProgram(originRenderProgram); 
+
+        let grid = new SPLAT.GridProgram(renderer, []);
+        renderer.addProgram(grid); 
     } else {
         renderer.removeProgram(originRenderProgram)
     }
+});
+
+document.getElementById('slider-transparency').addEventListener('input', function() {
+    const slider = document.getElementById('slider-transparency');
+    
+    transparency_threshold = slider.value;
+
 });
 
 document.getElementById('slider').addEventListener('input', function() {
@@ -402,9 +415,31 @@ document.getElementById('start-diminish').addEventListener('click', function() {
 document.getElementById('floatingButton').addEventListener('click', function() {    
     const floatingButton = document.getElementById('floatingButton');
     floatingButton.style.bottom = '-100px';
-    if(floatingButton.textContent == "Diminish") {
+    if(floatingButton.textContent === "Diminish") {
         cullByCube = true;
         boxObject.ereaseBox(renderer);
+        floatingButton.textContent = "Neu Maskieren"
+        floatingButton.style.bottom = '20px';
+
+    } else if(floatingButton.textContent == "Neu Maskieren") {
+        cullByCube = false;
+        boxObject = null;
+        splat.splats.forEach(async singleSplat => {        
+            singleSplat.Rendered = 1;
+        })
+        splat.applyRendering();
+
+        touchPoints1 = [];
+        touchPoints2 = [];
+        frustum1 = null;
+        frustum2 = null;
+        frustumCreationActive = false;
+
+        floatingButton.textContent = "Maskieren beginnen"
+        floatingButton.style.bottom = '20px';
+
+    } else if(floatingButton.textContent == "Erneut Platzieren") {
+
     } else {
         frustumCreationActive = true;
     }    
@@ -759,7 +794,10 @@ function handleMouseDown2(event) {
                 floatingButton.textContent = "Diminish";
                 floatingButton.style.bottom = '20px';
 
-                if (frustum1 && frustum2) {                            
+                if (frustum1 && frustum2) {    
+                    // frustum1.drawFrustum(renderer);
+                    // frustum2.drawFrustum(renderer);
+
                     const intersectionPoints = frustum1.intersectFrustum(frustum2);
                     drawIntersectionVolume(intersectionPoints);                    
                 }
@@ -801,9 +839,16 @@ let boxObject;
 function drawIntersectionVolume(box) {             
     box.drawBox(renderer);
            
+    console.log(box)
     boxObject = box;
     hideScreenDrawings();
 }
+
+document.getElementById('blendSlider').addEventListener('input', function() {
+    const slider = document.getElementById('blendSlider');
+    
+    blend_value = slider.value;
+});
 
 function updateBoxFrustum() {    
     screenPoints = boxObject.getCorners().map(corner => camera.worldToScreenPoint(corner));
@@ -842,9 +887,18 @@ function updateBoxFrustum() {
         if (nodeData && nodeData.data) {
             for(let singleSplat of nodeData.data) { 
                 if(exactMasking) {
-                    if(boxFrustum.containsBox(singleSplat.bounds)) {                      
-                        singleSplat.Rendered = 1;                            
-                    } 
+                    if(boxFrustum.containsBox(singleSplat.bounds)) {         
+                        const distance = boxFrustum.distanceToPoint(singleSplat.PositionVec3);       
+                        singleSplat.Rendered = 1;  
+                                                
+                        if (distance < transparency_threshold) {
+                            singleSplat.setTransparency(distance / transparency_threshold);
+                        } else {
+                            singleSplat.setTransparency(1.0);
+                        }
+                                                 
+                        singleSplat.setBlending(blend_value);
+                    }                     
                 } else {
                     singleSplat.Rendered = 1;                        
                 }                      

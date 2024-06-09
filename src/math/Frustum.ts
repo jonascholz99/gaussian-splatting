@@ -40,6 +40,9 @@ class Frustum {
     frustumRenderProgram: ShaderProgram | undefined;
     needsUpdate: boolean;
 
+    margin: number | undefined;
+    marginFrustum: Frustum | undefined;
+
     constructor(
         p0: Plane = new Plane(),
         p1: Plane = new Plane(),
@@ -191,6 +194,17 @@ class Frustum {
 
         this.frustumRenderProgram = new CubeVisualisationProgram(renderer, [], corners);
         renderer.addProgram(this.frustumRenderProgram);
+    }
+
+    distanceToPoint(point: Vector3): number {
+        let minDistance = Infinity;
+        for (const plane of this.planes) {
+            const distance = plane.distanceToPoint(point);
+            if (distance < minDistance) {
+                minDistance = distance;
+            }
+        }
+        return minDistance;
     }
     
     ereaseFrustum(renderer: WebGLRenderer) {

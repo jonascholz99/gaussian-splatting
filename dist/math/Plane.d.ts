@@ -9,5 +9,7 @@ declare class Plane {
     intersect(origin: Vector3, direction: Vector3): Vector3 | null;
     normalize(): this;
     distanceToPoint(point: Vector3): number;
+    clone(): Plane;
+    copy(plane: Plane): this;
 }
 export { Plane };

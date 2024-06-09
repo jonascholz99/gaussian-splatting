@@ -53,6 +53,16 @@ class Plane {
     distanceToPoint(point: Vector3): number {
         return this.normal.dot(point) - this.constant;
     }
+
+    clone(): Plane {
+        return new Plane().copy(this);
+    }
+
+    copy(plane: Plane): this {
+        this.normal.copy(plane.normal);
+        this.constant = plane.constant;
+        return this;
+    }
 }
 
 export { Plane };

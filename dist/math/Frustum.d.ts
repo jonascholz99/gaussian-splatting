@@ -11,6 +11,8 @@ declare class Frustum {
     frustumCorners: Vector3[] | undefined;
     frustumRenderProgram: ShaderProgram | undefined;
     needsUpdate: boolean;
+    margin: number | undefined;
+    marginFrustum: Frustum | undefined;
     constructor(p0?: Plane, p1?: Plane, p2?: Plane, p3?: Plane, p4?: Plane, p5?: Plane);
     setFromCube(cube: Box3, camera: Camera): void;
     setFromPoints(nearTopLeft: Vector3, nearTopRight: Vector3, nearBottomLeft: Vector3, nearBottomRight: Vector3, farTopLeft: Vector3, farTopRight: Vector3, farBottomLeft: Vector3, farBottomRight: Vector3): void;
@@ -18,6 +20,7 @@ declare class Frustum {
     intersectsBox(box: Box3, renderer?: WebGLRenderer | null): boolean;
     getFrustumPoints(): Vector3[];
     drawFrustum(renderer: WebGLRenderer): void;
+    distanceToPoint(point: Vector3): number;
     ereaseFrustum(renderer: WebGLRenderer): void;
     getRays(): NewRay[];
     intersectFrustum(otherFrustum: Frustum): Box3;

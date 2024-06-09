@@ -245,6 +245,18 @@ class SingleSplat {
         const scale = this.Scale;
         return new Vector3(scale[0], scale[1], scale[2]);
     }
+
+    setTransparency(alpha: number) {
+        const color = this.Color;
+        color[3] = Math.floor(alpha * this._defaultColor[3]);
+        this.Color = color;
+    }
+    
+    setBlending(alpha: number) {
+        const color = this.Color;
+        color[3] = Math.floor(alpha * color[3]);
+        this.Color = color;
+    }
     
     // get Color() {
     //     return this._color;

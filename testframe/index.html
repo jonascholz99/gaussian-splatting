@@ -25,10 +25,16 @@
             <label>
                 <input type="checkbox" id="checkbox-masking"> Exact Masking
             </label>
+            <label for="transparency">transparency threshold</label>
+            <input type="range" id="slider-transparency" min="0" max="5" value="2" step="0.1">
+
+            <hr>
 
             <label>
                 <input type="checkbox" id="checkbox-origin"> Show Origin
             </label>
+
+            <hr>
 
             <label>
                 <input type="checkbox" id="checkbox"> Show Octree Grid
@@ -41,6 +47,10 @@
             <div id="spinner"></div>
             <div id="loading-text">Loading data and creating splat scene...</div>
             <ul id="completed-sections"></ul>
+        </div>
+
+        <div class="slider-container">
+            <input type="range" class="slider" id="blendSlider" min="0" max="1" value="1", step="0.01">
         </div>
 
         <button class="floating-button" id="floatingButton">Floating Button</button>        
@@ -164,6 +174,6 @@
 
         <canvas id="canvas"></canvas>
         <script src="./main.js" type="module"></script>    
-        <script src="./ExplanationController.js" type="module"></script>         
+        <!-- <script src="./ExplanationController.js" type="module"></script>-->
     </body>
 </html>

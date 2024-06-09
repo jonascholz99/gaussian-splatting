@@ -27,5 +27,7 @@ declare class SingleSplat {
     get PositionVec3(): Vector3;
     get index(): number;
     get ScaleVec3(): Vector3;
+    setTransparency(alpha: number): void;
+    setBlending(alpha: number): void;
 }
 export { SingleSplat };
