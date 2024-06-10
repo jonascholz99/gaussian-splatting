@@ -247,11 +247,10 @@ class SingleSplat {
     }
 
     setTransparency(alpha: number) {
-        const color = this.Color;
-        color[3] = Math.floor(alpha * this._defaultColor[3]);
-        this.Color = color;
+        this.Color[3] = Math.floor(alpha * this._defaultColor[3]);
     }
-    
+
+
     setBlending(alpha: number) {
         const color = this.Color;
         color[3] = Math.floor(alpha * color[3]);
