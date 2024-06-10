@@ -349,7 +349,7 @@ document.getElementById('show-all').addEventListener('click', async function() {
     splat.splats.forEach(async singleSplat => {        
         singleSplat.Rendered = 1;       
     })
-    splat.updateRenderingOfSplats();      
+    splat.applyRendering();      
 });
 
 // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -361,7 +361,7 @@ document.getElementById('show-none').addEventListener('click', async function() 
     splat.splats.forEach(async singleSplat => {        
         singleSplat.Rendered = 0;               
     })
-    splat.updateRenderingOfSplats();      
+    splat.applyRendering();      
 });
 
 // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -376,7 +376,7 @@ document.getElementById('render-selected-splats').addEventListener('click', func
     currentlySelectedSplats.forEach(singleSplat => {
         singleSplat.Rendered = 1;               
     })
-    splat.updateRenderingOfSplats();   
+    splat.applyRendering();   
 });
 
 // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

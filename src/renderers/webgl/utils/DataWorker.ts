@@ -57,8 +57,13 @@ const pack = async (splat: Splat) => {
         }
     }
     
+    
     const targetAllocatedVertexCount = Math.pow(2, Math.ceil(Math.log2(splat.vertexCount)));
     const targetAllocatedRenderedVertexCount = Math.pow(2, Math.ceil(Math.log2(renderedSplats)));
+
+    console.log("allocatedRenderedVertexCount: " +allocatedRenderedVertexCount)
+    console.log("targetAllocatedRenderedVertexCount: " + targetAllocatedRenderedVertexCount)
+    
     if (targetAllocatedRenderedVertexCount > allocatedRenderedVertexCount) {
         if (allocatedRenderedVertexCount > 0) {
             wasmModule._free(positionsPtr);
@@ -89,7 +94,11 @@ const pack = async (splat: Splat) => {
         worldPositionsPtr = wasmModule._malloc(3 * allocatedRenderedVertexCount * 4);
         worldRotationsPtr = wasmModule._malloc(4 * allocatedRenderedVertexCount * 4);
         worldScalesPtr = wasmModule._malloc(3 * allocatedRenderedVertexCount * 4);
+    } if(targetAllocatedRenderedVertexCount === 0 ) {
+        allocatedVertexCount = targetAllocatedVertexCount;
+        renderedPtr = wasmModule._malloc(allocatedVertexCount);
     }
+    
 
     if (splat.positions.length > allocatedRenderedVertexCount * 3) {
         throw new Error("splat.positions exceeds allocated memory");
