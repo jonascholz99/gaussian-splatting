@@ -3,10 +3,10 @@ import { Vector3 } from "../math/Vector3";
 import { Quaternion } from "../math/Quaternion";
 import { SplatData } from "./SplatData";
 declare class SingleSplat {
-    private _index;
+    private readonly _index;
     private _data;
-    private _bounds;
-    private _defaultColor;
+    private readonly _bounds;
+    private readonly _defaultColor;
     recalculateBounds: () => void;
     translate: (translation: Vector3) => void;
     rotate: (rotation: Quaternion) => void;

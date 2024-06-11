@@ -122,6 +122,10 @@ function rotationsAreClose(rotation1, rotation2, tolerance) {
            isWithinTolerance(rotation1.z, rotation2.z, tolerance);
 }
 
+let cameraPosition = camera.position.clone();
+let cameraRotation = camera.rotation.clone();
+const tolerance = 0.1; // 10% Toleranz
+
 async function main() 
 {        
     var url = "./zw1027_4.splat";    
@@ -134,10 +138,8 @@ async function main()
     };
 
     let splatIndices = [];
-    let cameraPosition = camera.position.clone();
-    let cameraRotation = camera.rotation.clone();
     
-    const tolerance = 1.1; // 10% Toleranz
+        
     const updateFrustum = () => {
         //Update frustum only if the camera has moved
         if (!positionsAreClose(camera.position, cameraPosition, tolerance) || !rotationsAreClose(camera.rotation, cameraRotation, tolerance)) {            
@@ -246,9 +248,7 @@ document.getElementById('checkbox-origin').addEventListener('change', function()
 document.getElementById('slider-transparency').addEventListener('input', function() {
     const slider = document.getElementById('slider-transparency');
     
-    transparency_threshold = slider.value;
-    console.log(transparency_threshold);
-
+    transparency_threshold = slider.value;    
 });
 
 document.getElementById('slider').addEventListener('input', function() {
@@ -897,7 +897,11 @@ function drawIntersectionVolume(box) {
     initialCenter = boxObject.center();
     initialSize = boxObject.size();    
 
+    cameraPosition = camera.position.clone();
+    cameraRotation = camera.rotation.clone();
+
     boxObject.drawBox(renderer);
+    
     hideScreenDrawings();
 }
 
@@ -911,14 +915,12 @@ document.getElementById('blendSlider').addEventListener('input', function() {
 let nearTopLeft, nearBottomRight, nearTopRight, nearBottomLeft;
 let farTopLeft, farTopRight, farBottomLeft, farBottomRight;
 
-function updateBoxFrustum() {
-    console.time("update")
-    console.time("getCorners")
+let firstTime = true;
+
+function updateBoxFrustum() {        
     screenPoints = boxObject.getCorners().map(corner => camera.worldToScreenPoint(corner));
     // cullByCube = false;     
-    console.timeEnd("getCorners")
-
-    console.time("minMax")
+    
     let minX = Infinity, minY = Infinity;
     let maxX = -Infinity, maxY = -Infinity;
 
@@ -927,10 +929,8 @@ function updateBoxFrustum() {
         minY = Math.min(minY, point.y);
         maxX = Math.max(maxX, point.x);
         maxY = Math.max(maxY, point.y);
-    }
-    console.timeEnd("minMax")
-
-    console.time("createFrustum")
+    }    
+    
     nearTopLeft = camera.screenToWorldPoint(minX, maxY);
     nearBottomRight = camera.screenToWorldPoint(maxX, minY);
     nearTopRight = camera.screenToWorldPoint(maxX, maxY);
@@ -944,43 +944,47 @@ function updateBoxFrustum() {
     // boxFrustum.ereaseFrustum(renderer);
     boxFrustum.setFromPoints(nearTopLeft, nearTopRight, nearBottomLeft, nearBottomRight, farTopLeft, farTopRight,farBottomLeft, farBottomRight);
     // boxFrustum.drawFrustum(renderer);    
-
-    console.timeEnd("createFrustum")
-
-    console.time("calculate iterator")
-    const iterator = new SPLAT.OctreeIterator(splat._octree.root, boxFrustum);
-    // iterator.processSplats();
-    console.timeEnd("calculate iterator")
-
-    console.time("Set SingleSplats")
-    splat.data.resetRendering();
-    let result = iterator.next();
-
-    while (!result.done) {        
-        const node = result.value;
-        const nodeData = node.data;
-        if (nodeData && nodeData.data) {
-            const nodeDataArray = nodeData.data; // Cache the array reference
-
-            for (let i = 0, len = nodeDataArray.length; i < len; i++) {
-                const singleSplat = nodeDataArray[i];
-
-                if (boxFrustum.containsBox(singleSplat.bounds)) {
-                    singleSplat.Rendered = 1;
-
-                    const distance = boxFrustum.distanceToPoint(singleSplat.PositionVec3);
-                    const transparency = Math.min(distance / transparency_threshold, 1.0);
-
-                    singleSplat.setTransparency(transparency);
-                    singleSplat.setBlending(1);
-                }
-            }
-        }
-
-        result = iterator.next();
-    }
     
-    splat.applyRendering();
-    console.timeEnd("Set SingleSplats")
-    console.timeEnd("update")
+
+    const iterator = new SPLAT.OctreeIterator(splat._octree.root, boxFrustum);    
+    
+    splat.data.resetRendering();
+    
+    // Funktion zur Verarbeitung einzelner Splats
+    function processSingleSplat(singleSplat) {
+        if (boxFrustum.containsBox(singleSplat.bounds)) {
+            singleSplat.Rendered = 1;
+            const distance = boxFrustum.distanceToPoint(singleSplat.PositionVec3);
+            const transparency = Math.min(distance / transparency_threshold, 1.0);
+            singleSplat.setTransparency(transparency);
+            singleSplat.setBlending(1);
+        }
+    }
+
+    // Promises zur Parallelisierung
+    const promises = [];
+    const nodes = [];
+    for (let result = iterator.next(); !result.done; result = iterator.next()) {
+        nodes.push(result.value);
+    }
+
+    nodes.forEach(node => {
+        const nodeDataArray = node.data?.data;
+
+        if (nodeDataArray) {
+            
+            promises.push(
+                new Promise((resolve) => {
+                    nodeDataArray.forEach(singleSplat => {
+                        processSingleSplat(singleSplat);
+                    });
+                    resolve();
+                })
+            );
+        }
+    });
+
+    Promise.all(promises).then(() => {
+        splat.applyRendering();        
+    });        
 }

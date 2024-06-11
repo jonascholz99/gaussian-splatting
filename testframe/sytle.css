@@ -137,7 +137,7 @@ body {
 }
 
 .panel.open {
-  max-height: 200px; /* Adjust based on content height */
+  max-height: 300px; /* Adjust based on content height */
   width: 200px;
 }
 

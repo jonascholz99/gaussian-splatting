@@ -80,9 +80,6 @@ const pack = async (splat: Splat) => {
 
         allocatedVertexCount = targetAllocatedVertexCount;
         allocatedRenderedVertexCount = targetAllocatedRenderedVertexCount;
-
-        console.log("allocatedVertexCount: " + allocatedVertexCount)
-        console.log("allocatedRenderedVertexCount: " + allocatedRenderedVertexCount)
         
         positionsPtr = wasmModule._malloc(3 * allocatedRenderedVertexCount * 4);
         rotationsPtr = wasmModule._malloc(4 * allocatedRenderedVertexCount * 4);
