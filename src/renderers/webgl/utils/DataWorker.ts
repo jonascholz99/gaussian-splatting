@@ -60,9 +60,6 @@ const pack = async (splat: Splat) => {
     
     const targetAllocatedVertexCount = Math.pow(2, Math.ceil(Math.log2(splat.vertexCount)));
     const targetAllocatedRenderedVertexCount = Math.pow(2, Math.ceil(Math.log2(renderedSplats)));
-
-    console.log("allocatedRenderedVertexCount: " +allocatedRenderedVertexCount)
-    console.log("targetAllocatedRenderedVertexCount: " + targetAllocatedRenderedVertexCount)
     
     if (targetAllocatedRenderedVertexCount > allocatedRenderedVertexCount) {
         if (allocatedRenderedVertexCount > 0) {
