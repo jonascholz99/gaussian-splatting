@@ -1,4 +1,4 @@
-import * as SPLAT from "../dist/index.js"
+import * as SPLAT from "../../dist/index.js"
 
 const canvas = document.getElementById("canvas");
 const renderer = new SPLAT.WebGLRenderer(canvas);
@@ -952,12 +952,15 @@ function updateBoxFrustum() {
     
     // Funktion zur Verarbeitung einzelner Splats
     function processSingleSplat(singleSplat) {
-        if (boxFrustum.containsBox(singleSplat.bounds)) {
-            singleSplat.Rendered = 1;
-            const distance = boxFrustum.distanceToPoint(singleSplat.PositionVec3);
+        const distance = boxFrustum.distanceToPoint(singleSplat.PositionVec3);
+        if (distance > 0) { //boxFrustum.containsBox(singleSplat.bounds)) {            
+            singleSplat.Rendered = 1;            
             const transparency = Math.min(distance / transparency_threshold, 1.0);
             singleSplat.setTransparency(transparency);
-            singleSplat.setBlending(1);
+            singleSplat.setBlending(1);            
+        } else {
+            // console.log("outside!")
+            // console.log(distance)
         }
     }
 
