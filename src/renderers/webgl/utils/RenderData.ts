@@ -318,13 +318,14 @@ class RenderData {
         };
 
         const build = (splat: Splat) => {
+
+            splat.data.calculateRenderedTransforms();
             
             if (splat.positionChanged || splat.rotationChanged || splat.scaleChanged || splat.selectedChanged) {
                 updateTransform(splat);
             }
             
             if(splat.renderNumberChanged) {
-                splat.data.calculateRenderedTransforms();
                 updateRenderData(splat);
                 splat.renderNumberChanged = false;
             }

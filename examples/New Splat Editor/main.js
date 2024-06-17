@@ -157,6 +157,7 @@ function updateScene() {
     splatPosition = new SPLAT.Vector3(xPosition, yPosition, zPosition);
     splatRotation = SPLAT.Quaternion.FromEuler(new SPLAT.Vector3(xRotation, yRotation, zRotation));
     
+
     splat.position = splatPosition;        
     splat.rotation = splatRotation;
 }
@@ -855,13 +856,20 @@ document.getElementById("select-splats-cube").addEventListener("click", function
     }, 10000); 
 })
 
-document.getElementById("set-transparency").addEventListener("click", function() {
+let firstSplat = true;
 
-    console.log(splat.splats[0].Color)
-    splat.splats.forEach(async singleSplat => {                
-        let color = new Uint8Array([singleSplat.Color[0], singleSplat.Color[1], singleSplat.Color[2], 5]);
-        singleSplat.Color = color;      
+document.getElementById("set-transparency").addEventListener("click", function() {    
+    splat.splats.forEach(singleSplat => {    
+        if(singleSplat.Rendered) {
+            if(firstSplat) {
+                console.log(singleSplat);
+                firstSplat =false;
+            }            
+            // let color = new Uint8Array([singleSplat.Color[0], singleSplat.Color[1], singleSplat.Color[2], 5]);
+        }         
+        // singleSplat.Color = color;      
     })
+    
     splat.applyRendering();  
 })
 

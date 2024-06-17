@@ -121,7 +121,6 @@ class SplatData {
 
 
         this.serialize = () => {
-            console.log("Serialize")
             const data = new Uint8Array(this.vertexCount * SplatData.RowLength);
 
             const f_buffer = new Float32Array(data.buffer);
@@ -203,7 +202,6 @@ class SplatData {
                     newIndex++;
                 }
             }
-
             this.detached = false;
         };
     }
