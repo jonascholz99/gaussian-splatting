@@ -318,9 +318,6 @@ class RenderData {
         };
 
         const build = (splat: Splat) => {
-
-            splat.data.calculateRenderedTransforms();
-            
             if (splat.positionChanged || splat.rotationChanged || splat.scaleChanged || splat.selectedChanged) {
                 updateTransform(splat);
             }
@@ -335,6 +332,8 @@ class RenderData {
             }
             
             if (!splat.data.changed || splat.data.detached || splat.renderNumberChanged) return;
+
+            splat.data.calculateRenderedTransforms();
             
             const serializedSplat = {
                 position: new Float32Array(splat.position.flat()),

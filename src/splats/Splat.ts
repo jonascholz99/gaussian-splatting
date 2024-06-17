@@ -69,6 +69,8 @@ class Splat extends Object3D {
         }
         
         this.applyRendering = () => {
+            this.data.calculateRenderedSplats();
+            
             this.renderNumberChanged = true;
             
             this.dispatchEvent(this._changeEvent);

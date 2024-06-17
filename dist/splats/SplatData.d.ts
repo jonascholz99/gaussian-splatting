@@ -21,6 +21,7 @@ declare class SplatData {
     translate: (translation: Vector3) => void;
     rotate: (rotation: Quaternion) => void;
     scale: (scale: Vector3) => void;
+    calculateRenderedSplats: () => void;
     serialize: () => Uint8Array;
     reattach: (positions: ArrayBufferLike, rotations: ArrayBufferLike, scales: ArrayBufferLike, colors: ArrayBufferLike, selection: ArrayBufferLike, rendered: ArrayBufferLike) => void;
     resetRendering: () => void;

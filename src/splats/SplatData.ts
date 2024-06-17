@@ -29,6 +29,7 @@ class SplatData {
     translate: (translation: Vector3) => void;
     rotate: (rotation: Quaternion) => void;
     scale: (scale: Vector3) => void;
+    calculateRenderedSplats: () => void;
     serialize: () => Uint8Array;
     reattach: (
         positions: ArrayBufferLike,
@@ -64,7 +65,10 @@ class SplatData {
         
         this.resetRendering = () => {
             this._rendered = new Uint8Array(this.vertexCount).fill(0);
-            
+        }
+        
+        this.calculateRenderedSplats = () => {
+            this._renderedSplats = this._rendered.reduce((count, value) => count + value, 0);
         }
 
         this.translate = (translation: Vector3) => {
@@ -292,7 +296,6 @@ class SplatData {
     }
     
     calculateRenderedTransforms() {
-        this._renderedSplats = this._rendered.reduce((count, value) => count + value, 0);
         this._renderedPositions = new Float32Array(this._renderedSplats * 3);
         this._renderedRotations = new Float32Array(this._renderedSplats * 4);
         this._renderedScales = new Float32Array(this._renderedSplats * 3);
