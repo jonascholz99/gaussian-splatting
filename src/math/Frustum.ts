@@ -185,14 +185,16 @@ class Frustum {
         return this.frustumCorners;
     }
     
-    drawFrustum(renderer: WebGLRenderer) {
+    drawFrustum(renderer: WebGLRenderer, visiblePlanes: boolean[] = [true, true, true, true, true, true]) {
         let points = this.getFrustumPoints();
         let corners = []
         for(let i = 0; i < points.length; i++) {
             corners.push(new Float32Array([points[i].x, points[i].y, points[i].z]))
         }
 
-        this.frustumRenderProgram = new CubeVisualisationProgram(renderer, [], corners);
+        let borderColor = new Float32Array([0.0, 0.0, 0.0, 1.0]);
+        let frustumColor = new Float32Array([1.0, 0.0, 0.0, 0.35]);
+        this.frustumRenderProgram = new CubeVisualisationProgram(renderer, [], corners,frustumColor, borderColor, visiblePlanes);
         renderer.addProgram(this.frustumRenderProgram);
     }
 
@@ -231,7 +233,7 @@ class Frustum {
         return rays;
     }
     
-    intersectFrustum(otherFrustum: Frustum): Box3{
+    intersectFrustum(otherFrustum: Frustum, renderer: WebGLRenderer | undefined): Box3{
         const intersectionPoints: Vector3[] = [];
         
         intersectionPoints.push(intersectPlanes( this.planes[2], otherFrustum.planes[3], otherFrustum.planes[4])!);
@@ -249,8 +251,52 @@ class Frustum {
             new Vector3(-Infinity, -Infinity, -Infinity),
         );
         
-        console.log(boundingBox.min)
-        console.log(boundingBox.max)
+        if(renderer !== undefined) {
+            let a1 = new Float32Array([intersectionPoints[0].x - 0.01, intersectionPoints[0].y - 0.01, intersectionPoints[0].z - 0.01]);
+            let a2 = new Float32Array([intersectionPoints[0].x + 0.01, intersectionPoints[0].y + 0.01, intersectionPoints[0].z + 0.01]);
+
+            let b1 = new Float32Array([intersectionPoints[1].x - 0.01, intersectionPoints[1].y - 0.01, intersectionPoints[1].z - 0.01]);
+            let b2 = new Float32Array([intersectionPoints[1].x + 0.01, intersectionPoints[1].y + 0.01, intersectionPoints[1].z + 0.01]);
+
+            let c1 = new Float32Array([intersectionPoints[2].x - 0.01, intersectionPoints[2].y - 0.01, intersectionPoints[2].z - 0.01]);
+            let c2 = new Float32Array([intersectionPoints[2].x + 0.01, intersectionPoints[2].y + 0.01, intersectionPoints[2].z + 0.01]);
+
+            let d1 = new Float32Array([intersectionPoints[3].x - 0.01, intersectionPoints[3].y - 0.01, intersectionPoints[3].z - 0.01]);
+            let d2 = new Float32Array([intersectionPoints[3].x + 0.01, intersectionPoints[3].y + 0.01, intersectionPoints[3].z + 0.01]);
+
+            let e1 = new Float32Array([intersectionPoints[4].x - 0.01, intersectionPoints[4].y - 0.01, intersectionPoints[4].z - 0.01]);
+            let e2 = new Float32Array([intersectionPoints[4].x + 0.01, intersectionPoints[4].y + 0.01, intersectionPoints[4].z + 0.01]);
+
+            let f1 = new Float32Array([intersectionPoints[5].x - 0.01, intersectionPoints[5].y - 0.01, intersectionPoints[5].z - 0.01]);
+            let f2 = new Float32Array([intersectionPoints[5].x + 0.01, intersectionPoints[5].y + 0.01, intersectionPoints[5].z + 0.01]);
+
+            let g1 = new Float32Array([intersectionPoints[6].x - 0.01, intersectionPoints[6].y - 0.01, intersectionPoints[6].z - 0.01]);
+            let g2 = new Float32Array([intersectionPoints[6].x + 0.01, intersectionPoints[6].y + 0.01, intersectionPoints[6].z + 0.01]);
+
+            let h1 = new Float32Array([intersectionPoints[7].x - 0.01, intersectionPoints[7].y - 0.01, intersectionPoints[7].z - 0.01]);
+            let h2 = new Float32Array([intersectionPoints[7].x + 0.01, intersectionPoints[7].y + 0.01, intersectionPoints[7].z + 0.01]);
+
+            let borderColor = new Float32Array([1.0, 1.0, 1.0, 1.0]);
+            let boxColor = new Float32Array([1.0, 1.0, 1.0, 1.0]);
+
+            let pro = new CubeVisualisationProgram(renderer, [], [a1, a2], boxColor, borderColor);
+            let pro2 = new CubeVisualisationProgram(renderer, [], [b1, b2], boxColor, borderColor);
+            let pro3 = new CubeVisualisationProgram(renderer, [], [c1, c2], boxColor, borderColor);
+            let pro4 = new CubeVisualisationProgram(renderer, [], [d1, d2], boxColor, borderColor);
+            let pro5 = new CubeVisualisationProgram(renderer, [], [e1, e2], boxColor, borderColor);
+            let pro6 = new CubeVisualisationProgram(renderer, [], [f1, f2], boxColor, borderColor);
+            let pro7 = new CubeVisualisationProgram(renderer, [], [g1, g2], boxColor, borderColor);
+            let pro8 = new CubeVisualisationProgram(renderer, [], [h1, h2], boxColor, borderColor);
+            renderer.addProgram(pro);
+            renderer.addProgram(pro2);
+            renderer.addProgram(pro3);
+            renderer.addProgram(pro4);
+            renderer.addProgram(pro5);
+            renderer.addProgram(pro6);
+            renderer.addProgram(pro7);
+            renderer.addProgram(pro8);   
+        }
+        
         for (const point of intersectionPoints) {
             boundingBox.expandByPoint(point);
         }

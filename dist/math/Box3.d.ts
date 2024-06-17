@@ -1,6 +1,7 @@
 import { Vector3 } from "./Vector3";
 import { WebGLRenderer } from "../renderers/WebGLRenderer";
 import { ShaderProgram } from "../renderers/webgl/programs/ShaderProgram";
+import { Vector4 } from "./Vector4";
 declare class Box3 {
     min: Vector3;
     max: Vector3;
@@ -15,7 +16,7 @@ declare class Box3 {
     expand(point: Vector3): void;
     permute(): void;
     surfaceArea(): number;
-    drawBox(renderer: WebGLRenderer): void;
+    drawBox(renderer: WebGLRenderer, color?: Vector4, cornerColor?: Vector4): void;
     ereaseBox(renderer: WebGLRenderer): void;
     expandByPoint(point: Vector3): void;
     getCorners(): Vector3[];

@@ -51,18 +51,13 @@ class Splat extends Object3D {
         };
 
         this.applyRotation = () => {
-            this._splats.forEach((splat, index) => {
-                splat.rotate(this.rotation);
-            });
+            this.data.rotate(this.rotation)
             this.rotation = new Quaternion();
-
-            this.data.changed = true;
+            
         };
 
         this.applyScale = () => {
-            this._splats.forEach((splat, index) => {
-                splat.scale(this.scale);
-            });
+            this.data.scale(this.scale);
             this.scale = new Vector3(1, 1, 1);
         };
         

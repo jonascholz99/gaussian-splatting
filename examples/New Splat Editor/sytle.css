@@ -21,46 +21,47 @@ canvas {
 }
 
 #side-menu {
-  padding: 20px;  
-  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
   transition: left 0.5s;
   overflow: hidden; /* Stellt sicher, dass keine inneren Elemente über den Rand hinausragen */
 }
 
-
-#side-menu h2, #side-menu label {
+#side-menu h2,
+#side-menu label {
   margin: 10px 0;
   margin-top: 40px;
 }
 
-#side-menu input, #side-menu button {
+#side-menu input,
+#side-menu button {
   margin: 5px 0;
   width: 100%;
 }
 
 #side-menu hr {
-  border: none;        /* Entfernt die Standardgrenze */
-  height: 1px;         /* Setzt die Höhe der Linie */
+  border: none; /* Entfernt die Standardgrenze */
+  height: 1px; /* Setzt die Höhe der Linie */
   background-color: #ccc; /* Wählt die Farbe der Linie */
-  margin: 20px 0;      /* Fügt oben und unten Abstand hinzu */
+  margin: 20px 0; /* Fügt oben und unten Abstand hinzu */
 }
 
 #vector3UpCorner {
   display: flex;
-  flex-direction: row; 
-  align-items: center; 
-  gap: 10px; 
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
   padding: 20px;
-  border: 1px solid #ccc;  
+  border: 1px solid #ccc;
 }
 
 #vector3LowerCorner {
   display: flex;
-  flex-direction: row; 
-  align-items: center; 
-  gap: 10px; 
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
   padding: 20px;
-  border: 1px solid #ccc;  
+  border: 1px solid #ccc;
 }
 
 #vector3Form label {
@@ -96,8 +97,12 @@ canvas {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 #loading-text {
@@ -114,7 +119,6 @@ canvas {
   text-align: center;
   margin-top: 20px;
 }
-
 
 body {
   margin: 0;
@@ -172,8 +176,6 @@ body {
   width: 100%;
 }
 
-
-
 .ring {
   position: absolute;
   width: 20px;
@@ -183,6 +185,7 @@ body {
   transform: translate(-50%, -50%);
   z-index: 9999; /* Sicherstellen, dass der Ring über anderen Objekten liegt */
 }
+
 .rectangle {
   position: absolute;
   border: 2px solid blue;
@@ -271,7 +274,6 @@ body {
   outline: none;
 }
 
-
 #blendSlider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
@@ -332,4 +334,22 @@ input[type="range"] {
 span {
   display: block;
   text-align: right;
+}
+
+button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 40px; /* Set equal width and height to make it round */
+  height: 40px; /* Set equal width and height to make it round */
+  border-radius: 50%;
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 16px; /* Adjust font size as needed */
+}
+
+button:hover {
+  background-color: #0056b3;
 }

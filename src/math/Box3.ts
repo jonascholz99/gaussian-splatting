@@ -2,6 +2,7 @@ import { Vector3 } from "./Vector3";
 import {WebGLRenderer} from "../renderers/WebGLRenderer";
 import {CubeVisualisationProgram} from "../renderers/webgl/programs/individual/CubeVisualisationProgram";
 import {ShaderProgram} from "../renderers/webgl/programs/ShaderProgram";
+import {Vector4} from "./Vector4";
 
 class Box3 {
     boxRenderProgram: ShaderProgram | undefined;
@@ -87,14 +88,15 @@ class Box3 {
         return 2 * ((width * height) + (width * depth) + (height * depth));
     }
     
-    public drawBox(renderer: WebGLRenderer) {
+    public drawBox(renderer: WebGLRenderer, color: Vector4 = new Vector4(0.0, 1.0, 0.0, 0.5), cornerColor: Vector4 = new Vector4(1.0, 0.0, 0.0, 1.0)) {
         
         this.permute();
-        let boxColor = new Float32Array([0.0, 1.0, 0.0, 0.5]);
+        let boxColor = new Float32Array([color.x, color.y, color.z, color.w]);
+        let lineColor = new Float32Array([cornerColor.x, cornerColor.y, cornerColor.z, cornerColor.w]);
         let boxMin = new Float32Array([this.min.x, this.min.y, this.min.z]);
         let boxMax = new Float32Array([this.max.x, this.max.y, this.max.z]);
         
-        this.boxRenderProgram = new CubeVisualisationProgram(renderer, [], [boxMin, boxMax], boxColor)
+        this.boxRenderProgram = new CubeVisualisationProgram(renderer, [], [boxMin, boxMax], boxColor, lineColor)
         renderer.addProgram(this.boxRenderProgram);
     }
     

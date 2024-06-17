@@ -29,7 +29,7 @@ class CubeVisualisationProgram extends ShaderProgram {
     protected _dispose: () => void;
 
 
-    constructor(renderer: WebGLRenderer, passes: ShaderPass[], points: Float32Array[], color: Float32Array = new Float32Array([1, 0, 0, 0.2])) {
+    constructor(renderer: WebGLRenderer, passes: ShaderPass[], points: Float32Array[], color: Float32Array = new Float32Array([1, 0, 0, 0.2]), borderColor: Float32Array = new Float32Array([1, 0, 0, 1]), drawPlanes: boolean[] | undefined = undefined) {
         if (!(points.length == 2 || points.length == 8)) {
             console.error("Please provide 2 oder 8 corners")
         }
@@ -48,7 +48,10 @@ class CubeVisualisationProgram extends ShaderProgram {
         let corners: Float32Array;
         let surface: Float32Array;
         
+        let numberOfVisiblePlanes = 0;
+        
         if(points.length === 2) {
+            numberOfVisiblePlanes = 6
             const [x1, y1, z1] = points[0];
             const [x2, y2, z2] = points[1];
 
@@ -86,7 +89,7 @@ class CubeVisualisationProgram extends ShaderProgram {
             const [x6, y6, z6] = points[5];
             const [x7, y7, z7] = points[6];
             const [x8, y8, z8] = points[7];
-
+            
             corners = new Float32Array([
                 x1, y1, z1, x2, y2, z2,  // Linie von P1 zu P2
                 x1, y1, z1, x3, y3, z3,  // Linie von P1 zu P3
@@ -101,20 +104,61 @@ class CubeVisualisationProgram extends ShaderProgram {
                 x6, y6, z6, x8, y8, z8,  // Linie von P6 zu P8
                 x7, y7, z7, x8, y8, z8   // Linie von P7 zu P8
             ]);
-
-
-            surface = new Float32Array([
-                x1, y1, z1, x2, y2, z2, x3, y3, z3, x2, y2, z2, x4, y4, z4, x3, y3, z3,
-                x5, y5, z5, x6, y6, z6, x7, y7, z7, x6, y6, z6, x8, y8, z8, x7, y7, z7,
-                x1, y1, z1, x5, y5, z5, x3, y3, z3, x7, y7, z7, x5, y5, z5, x3, y3, z3,
-                x2, y2, z2, x6, y6, z6, x4, y4, z4, x8, y8, z8, x6, y6, z6, x4, y4, z4,
-                x1, y1, z1, x2, y2, z2, x5, y5, z5, x6, y6, z6, x2, y2, z2, x5, y5, z5,
-                x3, y3, z3, x4, y4, z4, x7, y7, z7, x8, y8, z8, x4, y4, z4, x7, y7, z7
-            ])
+            
+            if(drawPlanes === undefined) {
+                numberOfVisiblePlanes = 6;
+                surface = new Float32Array([
+                    x1, y1, z1, x2, y2, z2, x3, y3, z3, x2, y2, z2, x4, y4, z4, x3, y3, z3,
+                    x5, y5, z5, x6, y6, z6, x7, y7, z7, x6, y6, z6, x8, y8, z8, x7, y7, z7,
+                    x1, y1, z1, x5, y5, z5, x3, y3, z3, x7, y7, z7, x5, y5, z5, x3, y3, z3,
+                    x2, y2, z2, x6, y6, z6, x4, y4, z4, x8, y8, z8, x6, y6, z6, x4, y4, z4,
+                    x1, y1, z1, x2, y2, z2, x5, y5, z5, x6, y6, z6, x2, y2, z2, x5, y5, z5,
+                    x3, y3, z3, x4, y4, z4, x7, y7, z7, x8, y8, z8, x4, y4, z4, x7, y7, z7
+                ])
+            } else {
+                let surfaceData: number[] = [];
+                if (drawPlanes[0]) {
+                    numberOfVisiblePlanes++;
+                    surfaceData.push(
+                        x1, y1, z1, x2, y2, z2, x3, y3, z3, x2, y2, z2, x4, y4, z4, x3, y3, z3
+                    );
+                }
+                if (drawPlanes[1]) {
+                    numberOfVisiblePlanes++;
+                    surfaceData.push(
+                        x5, y5, z5, x6, y6, z6, x7, y7, z7, x6, y6, z6, x8, y8, z8, x7, y7, z7
+                    );
+                }
+                if (drawPlanes[2]) {
+                    numberOfVisiblePlanes++;
+                    surfaceData.push(
+                        x1, y1, z1, x5, y5, z5, x3, y3, z3, x7, y7, z7, x5, y5, z5, x3, y3, z3
+                    );
+                }
+                if (drawPlanes[3]) {
+                    numberOfVisiblePlanes++;
+                    surfaceData.push(
+                        x2, y2, z2, x6, y6, z6, x4, y4, z4, x8, y8, z8, x6, y6, z6, x4, y4, z4
+                    );
+                }
+                if (drawPlanes[4]) {
+                    numberOfVisiblePlanes++;
+                    surfaceData.push(
+                        x1, y1, z1, x2, y2, z2, x5, y5, z5, x6, y6, z6, x2, y2, z2, x5, y5, z5
+                    );
+                }
+                if (drawPlanes[5]) {
+                    numberOfVisiblePlanes++;
+                    surfaceData.push(
+                        x3, y3, z3, x4, y4, z4, x7, y7, z7, x8, y8, z8, x4, y4, z4, x7, y7, z7
+                    );
+                }
+                surface = new Float32Array(surfaceData);
+            }
         }
         
 
-        const colorLines = new Float32Array([0, 0, 0, 1]);
+        const colorLines = borderColor;
 
         this._initialize = () => {
             vertexBuffer = gl.createBuffer() as WebGLBuffer;
@@ -142,7 +186,7 @@ class CubeVisualisationProgram extends ShaderProgram {
             gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
             gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
             gl.vertexAttribPointer(positionAttribute, 3, gl.FLOAT, false, 0, 0);
-            gl.drawArrays(gl.TRIANGLES, 0, 36);
+            gl.drawArrays(gl.TRIANGLES, 0, 6 * numberOfVisiblePlanes);
         };
         
         this._render = () => {

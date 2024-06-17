@@ -6,7 +6,7 @@ declare class CubeVisualisationProgram extends ShaderProgram {
     protected _resize: () => void;
     protected _render: () => void;
     protected _dispose: () => void;
-    constructor(renderer: WebGLRenderer, passes: ShaderPass[], points: Float32Array[], color?: Float32Array);
+    constructor(renderer: WebGLRenderer, passes: ShaderPass[], points: Float32Array[], color?: Float32Array, borderColor?: Float32Array, drawPlanes?: boolean[] | undefined);
     protected _getFragmentSource(): string;
     protected _getVertexSource(): string;
 }

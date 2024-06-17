@@ -54,6 +54,17 @@ function setMouseUsage(usage) {
     }
 }
 
+function showControlPanel() {
+    document.getElementById('control-panel').style.bottom = '60px';
+}
+
+function hideControlPanel() {
+    document.getElementById('control-panel').style.bottom = '-100%';
+}
+
+let controlPanelHeader = document.getElementById('control-panel-header');
+let leftControlHeader = document.getElementById('left-control-header');
+let rightControlHeader = document.getElementById('right-control-header');
 
 document.getElementById('x-position').oninput = function() {
     updateValue('x-position-value', this.value);
@@ -75,9 +86,79 @@ document.getElementById('z-scaling').oninput = function() {
     updateValue('z-scaling-value', this.value);
 };
 
+let controlPanelUsage = 'NONE';
+
 function updateValue(id, value) {
     document.getElementById(id).textContent = value;
-    updateCube();
+
+    if(controlPanelUsage === 'SELECTION') {
+        updateCube();   
+    } else if(controlPanelUsage === 'SCENE') {
+        updateScene();
+    }
+}
+
+function updateControlPanelSlider() {    
+    const sliderXPosition = document.getElementById('x-position');
+    const sliderYPosition = document.getElementById('y-position');
+    const sliderZPosition = document.getElementById('z-position');
+
+    const sliderXRotation = document.getElementById('x-scaling');
+    const sliderYRotation = document.getElementById('y-scaling');
+    const sliderZRotation = document.getElementById('z-scaling');
+
+    if(controlPanelUsage === 'SELECTION') {
+        updateCube();   
+    } else if(controlPanelUsage === 'SCENE') {
+        sliderXPosition.min = -3;
+        sliderXPosition.max = 3;
+        sliderXPosition.step = 0.01;
+        sliderXPosition.value = 0;
+
+        sliderYPosition.min = -3;
+        sliderYPosition.max = 3;
+        sliderYPosition.step = 0.01;
+        sliderYPosition.value = 0;
+
+        sliderZPosition.min = -3;
+        sliderZPosition.max = 3;
+        sliderZPosition.step = 0.01;
+        sliderZPosition.value = 0;
+
+
+        sliderXRotation.min = -2;
+        sliderXRotation.max = 2;
+        sliderXRotation.step = 0.01;
+        sliderXRotation.value = 0;
+
+        sliderYRotation.min = -2;
+        sliderYRotation.max = 2;
+        sliderYRotation.step = 0.01;
+        sliderYRotation.value = 0;
+
+        sliderZRotation.min = -2;
+        sliderZRotation.max = 2;
+        sliderZRotation.step = 0.01;
+        sliderZRotation.value = 0;
+    }
+}
+
+let splatPosition;
+let splatRotation;
+function updateScene() {
+    const xPosition = parseFloat(document.getElementById('x-position').value);
+    const yPosition = parseFloat(document.getElementById('y-position').value);
+    const zPosition = parseFloat(document.getElementById('z-position').value);
+    
+    const xRotation = parseFloat(document.getElementById('x-scaling').value);
+    const yRotation = parseFloat(document.getElementById('y-scaling').value);
+    const zRotation = parseFloat(document.getElementById('z-scaling').value);
+
+    splatPosition = new SPLAT.Vector3(xPosition, yPosition, zPosition);
+    splatRotation = SPLAT.Quaternion.FromEuler(new SPLAT.Vector3(xRotation, yRotation, zRotation));
+    
+    splat.position = splatPosition;        
+    splat.rotation = splatRotation;
 }
 
 function updateCube() {
@@ -223,6 +304,57 @@ document.getElementById('checkbox').addEventListener('change', function() {
     } else {
         renderer.removeProgram(octreeRenderProgram)
     }
+});
+
+let nodeBox;
+
+document.getElementById('childrenOf').addEventListener('change', function() {
+    if(nodeBox) {
+        nodeBox.ereaseBox(renderer);
+    }    
+
+    let value = parseInt(document.getElementById('childrenOf').value);    
+    
+    const slider = document.getElementById('slider');
+    
+    const level = parseInt(slider.value, 10);
+
+    let levelChildCount = splat.octree.findNodesByLevel(level).length
+    
+    if(value < 0) {
+        value = 0;
+        document.getElementById('childrenOf').value = value;
+    } else if(value >= levelChildCount) {
+        value = levelChildCount-1;
+        document.getElementById('childrenOf').value = levelChildCount-1;
+    }
+
+    splat.data.resetRendering();
+    splat.splats.forEach(async singleSplat => {        
+        singleSplat.Selected = 0;       
+    })
+
+    let node = splat.octree.findNodesByLevel(level)[value];
+    nodeBox = new SPLAT.Box3(node.min, node.max);
+
+    let allNodes = splat.octree.cull(nodeBox);
+    allNodes.forEach(node => {
+        let nodeData = node.data
+        if(nodeData) {
+            let splatArray = nodeData.data;
+            if(splatArray) {                
+                splatArray.forEach(singleSplat => {
+                    if(nodeBox.contains(singleSplat.PositionVec3)) {
+                        singleSplat.Selected = 1;
+                        singleSplat.Rendered = 1;
+                    }                    
+                });
+            }            
+        }
+    });    
+    splat.applyRendering();
+
+    nodeBox.drawBox(renderer, new SPLAT.Vector4(1.0, 1.0, 1.0, 0.1), new SPLAT.Vector4(1.0, 0.0, 0.0, 1.0));
 });
 
 document.getElementById('checkbox-masking').addEventListener('change', function() {
@@ -456,6 +588,21 @@ document.getElementById('select-splats').addEventListener('click', function() {
         splat.updateRenderingOfSplats();      
     } 
 
+});
+
+document.getElementById('start-transform').addEventListener('click', function() {    
+    controlPanelHeader.innerText = "Transform Scene"; 
+    leftControlHeader.innerText = "Position";
+    rightControlHeader.innerText = "Rotation";
+
+    controlPanelUsage = "SCENE";
+
+    splatPosition = splat.position;
+    splatRotation = splat.rotation;    
+
+    updateControlPanelSlider();
+
+    showControlPanel();
 });
 
 document.getElementById('start-diminish').addEventListener('click', function() {    
@@ -850,10 +997,11 @@ function handleMouseDown2(event) {
                 floatingButton.style.bottom = '20px';
 
                 if (frustum1 && frustum2) {    
-                    // frustum1.drawFrustum(renderer);
-                    // frustum2.drawFrustum(renderer);
+                    // frustum1.drawFrustum(renderer, [false, false, false, false, false, false]);
+                    // frustum2.drawFrustum(renderer, [false, false, false, false, false, false]);
 
                     const intersectionPoints = frustum1.intersectFrustum(frustum2);
+                                                            
                     drawIntersectionVolume(intersectionPoints);                    
                 }
             }
@@ -917,7 +1065,8 @@ let farTopLeft, farTopRight, farBottomLeft, farBottomRight;
 
 let firstTime = true;
 
-function updateBoxFrustum() {        
+function updateBoxFrustum() {      
+    
     screenPoints = boxObject.getCorners().map(corner => camera.worldToScreenPoint(corner));
     // cullByCube = false;     
     
@@ -943,51 +1092,53 @@ function updateBoxFrustum() {
 
     // boxFrustum.ereaseFrustum(renderer);
     boxFrustum.setFromPoints(nearTopLeft, nearTopRight, nearBottomLeft, nearBottomRight, farTopLeft, farTopRight,farBottomLeft, farBottomRight);
-    // boxFrustum.drawFrustum(renderer);    
     
+
+    drawRectangle(minX, minY, maxX, maxY);  
 
     const iterator = new SPLAT.OctreeIterator(splat._octree.root, boxFrustum);    
     
-    splat.data.resetRendering();
-    
-    // Funktion zur Verarbeitung einzelner Splats
-    function processSingleSplat(singleSplat) {
-        const distance = boxFrustum.distanceToPoint(singleSplat.PositionVec3);
-        if (distance > 0) { //boxFrustum.containsBox(singleSplat.bounds)) {            
-            singleSplat.Rendered = 1;            
-            const transparency = Math.min(distance / transparency_threshold, 1.0);
-            singleSplat.setTransparency(transparency);
-            singleSplat.setBlending(1);            
-        } else {
-            // console.log("outside!")
-            // console.log(distance)
+        splat.data.resetRendering();
+        
+        // Funktion zur Verarbeitung einzelner Splats
+        function processSingleSplat(singleSplat) {
+            const distance = boxFrustum.distanceToPoint(singleSplat.PositionVec3);
+            if (distance > 0) { //boxFrustum.containsBox(singleSplat.bounds)) {            
+                singleSplat.Rendered = 1;            
+                const transparency = Math.min(distance / transparency_threshold, 1.0);
+                singleSplat.setTransparency(transparency);
+                singleSplat.setBlending(1);            
+            } else {
+                // console.log("outside!")
+                // console.log(distance)
+            }
         }
-    }
 
-    // Promises zur Parallelisierung
-    const promises = [];
-    const nodes = [];
-    for (let result = iterator.next(); !result.done; result = iterator.next()) {
-        nodes.push(result.value);
-    }
-
-    nodes.forEach(node => {
-        const nodeDataArray = node.data?.data;
-
-        if (nodeDataArray) {
-            
-            promises.push(
-                new Promise((resolve) => {
-                    nodeDataArray.forEach(singleSplat => {
-                        processSingleSplat(singleSplat);
-                    });
-                    resolve();
-                })
-            );
+        // Promises zur Parallelisierung
+        const promises = [];
+        const nodes = [];
+        for (let result = iterator.next(); !result.done; result = iterator.next()) {
+            nodes.push(result.value);
         }
-    });
 
-    Promise.all(promises).then(() => {
-        splat.applyRendering();        
-    });        
+        nodes.forEach(node => {
+            const nodeDataArray = node.data?.data;
+
+            if (nodeDataArray) {
+                
+                promises.push(
+                    new Promise((resolve) => {
+                        nodeDataArray.forEach(singleSplat => {
+                            processSingleSplat(singleSplat);
+                        });
+                        resolve();
+                    })
+                );
+            }
+        });
+
+        Promise.all(promises).then(() => {
+            splat.applyRendering();        
+        });   
+               
 }

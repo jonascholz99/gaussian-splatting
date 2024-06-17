@@ -19,11 +19,11 @@ declare class Frustum {
     setFromProjectionMatrix(m: Matrix4): void;
     intersectsBox(box: Box3, renderer?: WebGLRenderer | null): boolean;
     getFrustumPoints(): Vector3[];
-    drawFrustum(renderer: WebGLRenderer): void;
+    drawFrustum(renderer: WebGLRenderer, visiblePlanes?: boolean[]): void;
     distanceToPoint(point: Vector3): number;
     ereaseFrustum(renderer: WebGLRenderer): void;
     getRays(): NewRay[];
-    intersectFrustum(otherFrustum: Frustum): Box3;
+    intersectFrustum(otherFrustum: Frustum, renderer: WebGLRenderer | undefined): Box3;
     containsPoint(point: Vector3): boolean;
     containsBox(box: Box3): boolean;
 }

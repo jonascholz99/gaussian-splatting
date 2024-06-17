@@ -1,4 +1,5 @@
 import { Vector3 } from "../math/Vector3";
+import { Quaternion } from "../math/Quaternion";
 declare class SplatData {
     static RowLength: number;
     private firstTime;
@@ -18,6 +19,8 @@ declare class SplatData {
     private _renderedColors;
     private _renderedSelection;
     translate: (translation: Vector3) => void;
+    rotate: (rotation: Quaternion) => void;
+    scale: (scale: Vector3) => void;
     serialize: () => Uint8Array;
     reattach: (positions: ArrayBufferLike, rotations: ArrayBufferLike, scales: ArrayBufferLike, colors: ArrayBufferLike, selection: ArrayBufferLike, rendered: ArrayBufferLike) => void;
     resetRendering: () => void;

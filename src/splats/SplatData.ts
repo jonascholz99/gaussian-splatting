@@ -27,6 +27,8 @@ class SplatData {
     private _renderedSelection: Uint8Array;
 
     translate: (translation: Vector3) => void;
+    rotate: (rotation: Quaternion) => void;
+    scale: (scale: Vector3) => void;
     serialize: () => Uint8Array;
     reattach: (
         positions: ArrayBufferLike,
@@ -74,7 +76,50 @@ class SplatData {
 
             this.changed = true;
         };
-        
+
+        this.rotate = (rotation: Quaternion) => {
+            const R = Matrix3.RotationFromQuaternion(rotation).buffer;
+            for (let i = 0; i < this.vertexCount; i++) {
+                const x = this.positions[3 * i + 0];
+                const y = this.positions[3 * i + 1];
+                const z = this.positions[3 * i + 2];
+
+                this.positions[3 * i + 0] = R[0] * x + R[1] * y + R[2] * z;
+                this.positions[3 * i + 1] = R[3] * x + R[4] * y + R[5] * z;
+                this.positions[3 * i + 2] = R[6] * x + R[7] * y + R[8] * z;
+
+                const currentRotation = new Quaternion(
+                    this.rotations[4 * i + 1],
+                    this.rotations[4 * i + 2],
+                    this.rotations[4 * i + 3],
+                    this.rotations[4 * i + 0],
+                );
+
+                const newRot = rotation.multiply(currentRotation);
+                this.rotations[4 * i + 1] = newRot.x;
+                this.rotations[4 * i + 2] = newRot.y;
+                this.rotations[4 * i + 3] = newRot.z;
+                this.rotations[4 * i + 0] = newRot.w;
+            }
+
+            this.changed = true;
+        };
+
+        this.scale = (scale: Vector3) => {
+            for (let i = 0; i < this.vertexCount; i++) {
+                this.positions[3 * i + 0] *= scale.x;
+                this.positions[3 * i + 1] *= scale.y;
+                this.positions[3 * i + 2] *= scale.z;
+
+                this.scales[3 * i + 0] *= scale.x;
+                this.scales[3 * i + 1] *= scale.y;
+                this.scales[3 * i + 2] *= scale.z;
+            }
+
+            this.changed = true;
+        };
+
+
         this.serialize = () => {
             console.log("Serialize")
             const data = new Uint8Array(this.vertexCount * SplatData.RowLength);
