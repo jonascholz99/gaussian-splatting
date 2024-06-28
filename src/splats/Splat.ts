@@ -199,9 +199,6 @@ class Splat extends Object3D {
     
     selectSplat(index: number, value: number) {
         this._splats[index].Selected = value;
-        
-        this.selectedChanged = true;
-        this.dispatchEvent(this._changeEvent);
     }
     
     renderSplat(index: number, value: number) {
