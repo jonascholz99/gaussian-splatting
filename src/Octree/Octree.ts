@@ -31,18 +31,16 @@ function getDepth(node: Node): number {
     return result;
 }
 
-function cull(node: Node, region: Box3 | Frustum, result: Node[], renderer: WebGLRenderer): void {
+function cull(node: Node, region: Box3 | Frustum, result: Node[]): void {
     const children = node.children;
     
     b.min = node.min;
     b.max = node.max;
     
-    // b.drawBox(renderer);
-    // setTimeout(() => {b.ereaseBox(renderer);}, 1000);
-    if(region.intersectsBox(b, renderer)) {
+    if(region.intersectsBox(b)) {
         if(children !== undefined && children !== null) {
             for(let i = 0; i < children.length; ++i) {
-                cull(children[i], region, result, renderer);
+                cull(children[i], region, result);
             }
         } else {
             result.push(node);
@@ -92,9 +90,9 @@ export class Octree implements Tree, Iterable<Node> {
         return this.root.getDimensions(result);
     }
     
-    cull(region: Box3 | Frustum, renderer: WebGLRenderer): Node[] {
+    cull(region: Box3 | Frustum): Node[] {
         const result: Node[] = []
-        cull(this.root, region, result, renderer);
+        cull(this.root, region, result);
         return result;
     }
     

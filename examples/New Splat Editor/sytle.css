@@ -335,21 +335,3 @@ span {
   display: block;
   text-align: right;
 }
-
-button {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 40px; /* Set equal width and height to make it round */
-  height: 40px; /* Set equal width and height to make it round */
-  border-radius: 50%;
-  background-color: #007BFF;
-  color: white;
-  border: none;
-  cursor: pointer;
-  font-size: 16px; /* Adjust font size as needed */
-}
-
-button:hover {
-  background-color: #0056b3;
-}

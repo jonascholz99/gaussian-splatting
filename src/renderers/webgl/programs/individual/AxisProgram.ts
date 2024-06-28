@@ -71,12 +71,9 @@ class AxisProgram extends ShaderProgram {
                 console.error("Failed to get the storage location of uniform variables");
                 return;
             }
-
-            console.log("Initialized AxisProgram successfully");
         };
 
         const drawAxis = (vertices: Float32Array, color: Float32Array) => {
-            console.log("Drawing axis with vertices:", vertices, "and color:", color);
             gl.uniform4fv(u_color, color);
             gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
             gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
@@ -91,8 +88,6 @@ class AxisProgram extends ShaderProgram {
                 throw new Error("Camera not set");
             }
 
-            console.log("Rendering AxisProgram");
-
             gl.enable(gl.BLEND);
             gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
@@ -105,7 +100,6 @@ class AxisProgram extends ShaderProgram {
         };
 
         this._dispose = () => {
-            console.log("Disposing AxisProgram resources");
             gl.deleteBuffer(vertexBuffer);
         };
     }

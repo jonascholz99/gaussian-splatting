@@ -225,23 +225,43 @@ async function main()
     const updateFrustum = () => {
         //Update frustum only if the camera has moved
         if (!positionsAreClose(camera.position, cameraPosition, tolerance) || !rotationsAreClose(camera.rotation, cameraRotation, tolerance)) {            
+            // oneTime = false;
             cameraPosition = camera.position.clone();
             cameraRotation = camera.rotation.clone();
-            cameraFrustum.ereaseFrustum(renderer);
-            cameraFrustum.setFromProjectionMatrix(camera.data.viewProj);
-            cameraFrustum.drawFrustum(renderer);
 
-            const iterator = new SPLAT.OctreeIterator(splat._octree.root, cameraFrustum);
-            splat.data.resetRendering();            
-                
-            for (let node of iterator) {        
-                const nodeData = node.data;        
-                if (nodeData && nodeData.data) {
-                    for(let singleSplat of nodeData.data) {                        
+            let minX = -1, minY = -1;
+            let maxX = 1, maxY = 1;             
+            
+            nearTopLeft = camera.screenToWorldPoint(minX, maxY);
+            nearBottomRight = camera.screenToWorldPoint(maxX, minY);
+            nearTopRight = camera.screenToWorldPoint(maxX, maxY);
+            nearBottomLeft = camera.screenToWorldPoint(minX, minY);
+
+            farTopLeft = nearTopLeft.add(camera.screenPointToRay(minX, maxY).multiply(camera.data.far));
+            farTopRight = nearTopRight.add(camera.screenPointToRay(maxX, maxY).multiply(camera.data.far));
+            farBottomLeft = nearBottomLeft.add(camera.screenPointToRay(minX, minY).multiply(camera.data.far));
+            farBottomRight = nearBottomRight.add(camera.screenPointToRay(maxX, minY).multiply(camera.data.far));            
+
+            // cameraFrustum.ereaseFrustum(renderer);
+            cameraFrustum.setFromPoints(nearTopLeft, nearTopRight, nearBottomLeft, nearBottomRight, farTopLeft, farTopRight,farBottomLeft, farBottomRight);            
+            // cameraFrustum.drawFrustum(renderer);
+
+            // const iterator = new SPLAT.OctreeIterator(.root, cameraFrustum);   
+            
+            const nodes = splat._octree.cull(cameraFrustum);                                
+
+            splat.data.resetRendering();                           
+
+            nodes.forEach(node => {  
+                let nodeData = node.data;                              
+                if (nodeData && nodeData.data) {     
+                    for(let singleSplat of nodeData.data) {                                 
                         singleSplat.Rendered = 1;                        
-                    }            
+                    }           
                 }
-            }                
+            });
+            
+                                        
             splat.applyRendering();
             
         }
@@ -250,8 +270,9 @@ async function main()
     };
 
     let frameCounter = 0;
-    const updateInterval = 15;
+    const updateInterval = 5;
     let firstFrame = true;    
+    let oneTime = true;
 
     const frame = () => {
         if(firstFrame) {
@@ -265,7 +286,7 @@ async function main()
 
         
         // Update frustum and extract indices if necessary
-        if (cullByCameraFrustum && frameCounter % updateInterval === 0) {
+        if (cullByCameraFrustum && frameCounter % updateInterval === 0 && oneTime) {            
             updateFrustum();        
         }       
 
@@ -1106,47 +1127,47 @@ function updateBoxFrustum() {
 
     const iterator = new SPLAT.OctreeIterator(splat._octree.root, boxFrustum);    
     
-        splat.data.resetRendering();
-        
-        // Funktion zur Verarbeitung einzelner Splats
-        function processSingleSplat(singleSplat) {
-            const distance = boxFrustum.distanceToPoint(singleSplat.PositionVec3);
-            if (distance > 0) { //boxFrustum.containsBox(singleSplat.bounds)) {            
-                singleSplat.Rendered = 1;            
-                const transparency = Math.min(distance / transparency_threshold, 1.0);
-                singleSplat.setTransparency(transparency);
-                singleSplat.setBlending(1);            
-            } else {
-                // console.log("outside!")
-                // console.log(distance)
-            }
+    splat.data.resetRendering();
+    
+    // Funktion zur Verarbeitung einzelner Splats
+    function processSingleSplat(singleSplat) {
+        const distance = boxFrustum.distanceToPoint(singleSplat.PositionVec3);
+        if (distance > 0) { //boxFrustum.containsBox(singleSplat.bounds)) {            
+            singleSplat.Rendered = 1;            
+            const transparency = Math.min(distance / transparency_threshold, 1.0);
+            singleSplat.setTransparency(transparency);
+            singleSplat.setBlending(1);            
+        } else {
+            // console.log("outside!")
+            // console.log(distance)
         }
+    }
 
-        // Promises zur Parallelisierung
-        const promises = [];
-        const nodes = [];
-        for (let result = iterator.next(); !result.done; result = iterator.next()) {
-            nodes.push(result.value);
+    // Promises zur Parallelisierung
+    const promises = [];
+    const nodes = [];
+    for (let result = iterator.next(); !result.done; result = iterator.next()) {
+        nodes.push(result.value);
+    }
+
+    nodes.forEach(node => {
+        const nodeDataArray = node.data?.data;
+
+        if (nodeDataArray) {
+            
+            promises.push(
+                new Promise((resolve) => {
+                    nodeDataArray.forEach(singleSplat => {
+                        processSingleSplat(singleSplat);
+                    });
+                    resolve();
+                })
+            );
         }
+    });
 
-        nodes.forEach(node => {
-            const nodeDataArray = node.data?.data;
-
-            if (nodeDataArray) {
-                
-                promises.push(
-                    new Promise((resolve) => {
-                        nodeDataArray.forEach(singleSplat => {
-                            processSingleSplat(singleSplat);
-                        });
-                        resolve();
-                    })
-                );
-            }
-        });
-
-        Promise.all(promises).then(() => {
-            splat.applyRendering();        
-        });   
+    Promise.all(promises).then(() => {
+        splat.applyRendering();        
+    });   
                
 }

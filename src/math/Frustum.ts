@@ -110,7 +110,7 @@ class Frustum {
 
         this.needsUpdate = true;
     }
-    
+
     setFromProjectionMatrix(m: Matrix4) {
         const planes = this.planes;
         const me = m.buffer;
@@ -120,15 +120,17 @@ class Frustum {
         const me8 = me[8], me9 = me[9], me10 = me[10], me11 = me[11];
         const me12 = me[12], me13 = me[13], me14 = me[14], me15 = me[15];
 
-        planes[0].setComponents(me3 - me0, me7 - me4, me11 - me8, me15 - me12).normalize();
-        planes[1].setComponents(me3 + me0, me7 + me4, me11 + me8, me15 + me12).normalize();
-        planes[2].setComponents(me3 + me1, me7 + me5, me11 + me9, me15 + me13).normalize();
-        planes[3].setComponents(me3 - me1, me7 - me5, me11 - me9, me15 - me13).normalize();
-        planes[4].setComponents(me3 - me2, me7 - me6, me11 - me10, me15 - me14).normalize();
-        planes[5].setComponents(me3 + me2, me7 + me6, me11 + me10, me15 + me14).normalize();
+        planes[0].setComponents(me3 - me0, me7 - me4, me11 - me8, me15 - me12).normalize(); // Linke
+        planes[1].setComponents(me3 + me0, me7 + me4, me11 + me8, me15 + me12).normalize(); // Rechte
+        planes[2].setComponents(me3 + me1, me7 + me5, me11 + me9, me15 + me13).normalize(); // Obere
+        planes[3].setComponents(me3 - me1, me7 - me5, me11 - me9, me15 - me13).normalize(); // Untere
+        planes[4].setComponents(me3 + me2, me7 + me6, me11 + me10, me15 + me14).normalize(); // Nähe
+        planes[5].setComponents(me3 - me2, me7 - me6, me11 - me10, me15 - me14).normalize(); // Ferne
 
         this.needsUpdate = true;
     }
+
+
 
     intersectsBox(box: Box3, renderer: WebGLRenderer | null = null): boolean {
         const planes = this.planes;

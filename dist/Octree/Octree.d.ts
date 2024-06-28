@@ -4,7 +4,6 @@ import { Vector3 } from "../math/Vector3";
 import { Box3 } from "../math/Box3";
 import { NewRaycaster } from "../utils/Raycaster";
 import { Frustum } from "../math/Frustum";
-import { WebGLRenderer } from "../renderers/WebGLRenderer";
 export declare class Octree implements Tree, Iterable<Node> {
     protected root: Node;
     constructor(root: Node);
@@ -13,7 +12,7 @@ export declare class Octree implements Tree, Iterable<Node> {
     get children(): Node[] | null;
     getCenter(result: Vector3): Vector3;
     getDimensions(result: Vector3): Vector3;
-    cull(region: Box3 | Frustum, renderer: WebGLRenderer): Node[];
+    cull(region: Box3 | Frustum): Node[];
     getDepth(): number;
     findNodesByLevel(level: number): Node[];
     getIntersectingNodes(raycaster: NewRaycaster): Node[];
