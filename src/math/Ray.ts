@@ -7,23 +7,13 @@ class Ray {
 
     constructor(origin: Vector3, direction: Vector3) {
         this.origin = origin;
-        this.direction = direction.normalize(); // Stellen Sie sicher, dass die Richtung normalisiert ist
+        this.direction = direction.normalize();
     }
-
-    /**
-     * Berechnet einen Punkt auf dem Strahl bei einem bestimmten Skalar 't'.
-     * @param t Der Skalarwert, der bestimmt, wie weit entlang des Strahls der Punkt liegt.
-     * @returns Der Punkt auf dem Strahl.
-     */
+    
     getPoint(t: number): Vector3 {
         return this.origin.add(this.direction.multiply(t));
     }
-
-    /**
-     * Prüft die Intersektion dieses Strahls mit einer gegebenen Bounding Box.
-     * @param box Die Box, mit der die Intersektion geprüft werden soll.
-     * @returns True, wenn der Strahl die Box schneidet, sonst false.
-     */
+    
     intersectsBox(box: Box3, maxDistance: number = Infinity): boolean {
         let tmin = (box.min.x - this.origin.x) / this.direction.x;
         let tmax = (box.max.x - this.origin.x) / this.direction.x;

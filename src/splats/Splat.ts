@@ -96,7 +96,7 @@ class Splat extends Object3D {
                 let singleSplat = new SingleSplat(i, this._data);
                 this._splats.push(singleSplat);
 
-                if (i % 1000 === 0) { // Nach jedem 1000. Eintrag den Main-Thread freigeben
+                if (i % 1000 === 0) { 
                     await Promise.resolve();
                 }
             }
@@ -111,7 +111,7 @@ class Splat extends Object3D {
             const pos = this._splats[i].Position;
             this._bounds.expand(new Vector3(pos[0], pos[1], pos[2]));
 
-            if (i % 1000 === 0) { // Nach jedem 1000. Eintrag den Main-Thread freigeben
+            if (i % 1000 === 0) { 
                 await Promise.resolve();
             }
         }
@@ -128,7 +128,7 @@ class Splat extends Object3D {
             positionVector.set(pos[0], pos[1], pos[2]);
             this._octree.set(positionVector, this._splats[i]);
 
-            if (i % 1000 === 0) { // Nach jedem 1000. Eintrag den Main-Thread freigeben
+            if (i % 1000 === 0) { 
                 await Promise.resolve();
             }
         }
@@ -236,7 +236,6 @@ class Splat extends Object3D {
     }
 
     serialize = () => {
-        console.log("serialize splat")
         const data = new Uint8Array(this._numberOfSplats * SplatData.RowLength);
 
         const f_buffer = new Float32Array(data.buffer);

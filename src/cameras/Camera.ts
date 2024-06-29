@@ -37,7 +37,6 @@ class Camera extends Object3D {
         }
         
         this.worldToCameraPoint = (worldPoint: Vector3) => {
-            // Transformiere den Punkt in den Kamera-Raum
             const cameraSpaceCoords = new Vector4(worldPoint.x, worldPoint.y, worldPoint.z, 1.0);
             const viewMatrix = this._data.viewMatrix;
             const cameraCoords = cameraSpaceCoords.multiply(viewMatrix);

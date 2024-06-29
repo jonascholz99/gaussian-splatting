@@ -17,8 +17,7 @@ const r = new NewRay();
 
 
 export function intersectOctree(octree: Node, ray: NewRay, flags: RaycastingFlags): number[] | null {
-
-    // Translate the octant extents to the scene origin.
+    
     const min = b.min.set(0, 0, 0);
     const max = b.max.subVectors(octree.max, octree.min);
 
@@ -27,14 +26,11 @@ export function intersectOctree(octree: Node, ray: NewRay, flags: RaycastingFlag
 
     const origin = r.origin.copy(ray.origin);
     const direction = r.direction.copy(ray.direction);
-
-    // Translate the ray to the center of the octant.
+    
     origin.sub(octree.getCenter(v)).add(halfDimensions);
-
-    // Reset all flags.
+    
     flags.value = 0;
-
-    // Handle rays with negative directions and prevent division by zero.
+    
     if(direction.x < 0.0) {
 
         origin.x = dimensions.x - origin.x;
@@ -71,20 +67,17 @@ export function intersectOctree(octree: Node, ray: NewRay, flags: RaycastingFlag
 
     }
 
-    // Improve IEEE double stability.
     const invDirX = 1.0 / direction.x;
     const invDirY = 1.0 / direction.y;
     const invDirZ = 1.0 / direction.z;
 
-    // Project the ray to the octant's boundaries.
     const tx0 = (min.x - origin.x) * invDirX;
     const tx1 = (max.x - origin.x) * invDirX;
     const ty0 = (min.y - origin.y) * invDirY;
     const ty1 = (max.y - origin.y) * invDirY;
     const tz0 = (min.z - origin.z) * invDirZ;
     const tz1 = (max.z - origin.z) * invDirZ;
-
-    // Check if the ray hits the octree.
+    
     const hit = (Math.max(tx0, ty0, tz0) < Math.min(tx1, ty1, tz1));
     return hit ? [tx0, ty0, tz0, tx1, ty1, tz1] : null;
 

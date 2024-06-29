@@ -56,13 +56,11 @@ class Frustum {
     }
 
     setFromCube(cube: Box3, camera: Camera) {
-        // 1. Berechne die Eckpunkte des Würfels
+        
         const points = cube.getCorners();
-
-        // 2. Projeziere die Eckpunkte aus der Sicht der Kamera
+        
         const projectedPoints = points.map(point => camera.worldToCameraPoint(point));
-
-        // 3. Definiere die Ebenen des Frustums
+        
         this.setFromPoints(
             projectedPoints[0], // Near-Top-Left
             projectedPoints[1], // Near-Top-Right

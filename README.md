@@ -1,16 +1,21 @@
-# Research Project Base - gsplat.js Framework
+# Gaussian Splatting Library
 
 ## Overview
+This framework represents an advancement and restructuring of the `gsplat.js` framework by Dylan Ebert. The original framework, which provides the foundational structure, can be found here: [gsplat.js on GitHub](https://github.com/huggingface/gsplat.js). 
 
-This repository contains a modified version of the `gsplat.js` framework by Hugging Face, specifically adapted for the needs of a particular research project. The original basis for this code can be found here: [gsplat.js on GitHub](https://github.com/huggingface/gsplat.js).
+This modified framework is derived from a master's thesis titled 'DimSplat. Development of a Diminished Reality Prototype with Gaussian Splats for Mobile Augmented Reality Applications'.
 
 ## Modifications
 
-The framework has been customized by me to meet specific requirements and functionalities for the research project. Changes include modifications in data processing, integration of special modules, and a tailored configuration specifically aimed at the project's objectives.
+Certainly! Here's the professionally translated text:
+
+This version has been adapted to meet the specific requirements and functionalities for the research project. The comprehensive changes include adjustments in splat generation, clustering, rendering, payload for the worker, and much more. It is important to note that it is still built upon Dylan Ebert's framework and utilizes its fundamental structure.
+
+Additionally, as previously mentioned, a method for clustering the splats has been integrated. For this purpose, the `three.js`-based Octree framework `sparse-octree` was utilized and adapted to the SPLAT framework. The original code for the Octree can be found here: [sparse-octree on GitHub](https://github.com/vanruesc/sparse-octree).
 
 ## Intended Use
 
-The code in this repository is not intended for public use. It has been developed specifically for use within this research project and should not be used for other purposes without proper authorization. Any use outside of this project context requires explicit consent from the project management.
+The code in this repository is not intended for public use. It has been developed specifically for use within this research project and should not be used for other purposes without proper authorization.
 
 ## Acknowledgments
 
